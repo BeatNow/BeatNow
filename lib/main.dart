@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'login/auth_controller.dart';
+import 'login/login_screen.dart';
+import 'login/signup_screen.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      title: 'Login Screen',
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.deepPurple,
+        textTheme: TextTheme(
+          bodyText2: TextStyle(
+            fontFamily: 'Franklin Gothic Demi',
+          ),
+        ),
+      ),
+      home: HomeScreen(),
+    );
+  }
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class HomeScreen extends StatelessWidget {
+  final AuthController _authController = Get.put(AuthController());
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
+    return Obx(() {
+      return _authController.selectedIndex.value == 0
+          ? LoginScreen()
+          : SignUpScreen();
+    });
   }
 }
