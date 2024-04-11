@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
-import 'package:login_flutter/auth_controller.dart';
+import 'auth_controller.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
     final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
