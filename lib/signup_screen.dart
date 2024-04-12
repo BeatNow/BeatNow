@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+
 import 'auth_controller.dart'; // Importa el controlador AuthController
 
 void main() => runApp(MyApp());
@@ -290,7 +294,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void registerOk() {
+void registerOk() async {
+  try {
+    await registerUser(
+      _fullNameController.text,
+      _emailController.text,
+      _usernameController.text,
+      _passwordController.text,
+    );
     _showErrorSnackBar('Registration successful!');
+  } catch (e) {
+    _showErrorSnackBar('Failed to register user: $e');
   }
+}
+
+
+
+Future<Map<String, dynamic>> registerUser(String fullname, String email, String username, String password) async {
+  Uri apiUrl = Uri.parse('http://10.0.2.2:8001/api/v1/register');
+
+  Map<String, dynamic> body = {
+    'fullname': fullname,
+    'email': email,
+    'username': username,
+    'password': password,
+  };
+
+  final http.Response response = await http.post(
+    apiUrl,
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(body),
+  );
+
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+  } else {
+    throw Exception('Failed to register user: ${response.body}');
+  }
+}
+
 }
