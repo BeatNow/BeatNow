@@ -1,3 +1,3 @@
-# flutter_test_1
+# BeatNow
 
-A new Flutter project.
+Flutter-based beat-finding app for all your songwriting needs.
