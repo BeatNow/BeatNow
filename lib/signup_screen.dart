@@ -45,7 +45,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-      onPrimary: Colors.white,
       backgroundColor: Color(0xFF3C0F4B),
       minimumSize: Size(double.infinity, 56),
       padding: EdgeInsets.symmetric(vertical: 16),
@@ -60,9 +59,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final ButtonStyle socialButtonStyle = ElevatedButton.styleFrom(
       shape: CircleBorder(),
-      padding: EdgeInsets.all(16),
-      primary: Colors.transparent, // Fondo transparente
-      onSurface: Colors.transparent, // Sin efecto al presionar
+      padding: EdgeInsets.all(16), // Sin efecto al presionar
       shadowColor: Colors.transparent, // Sin sombra
       elevation: 0, // Sin elevación
     );

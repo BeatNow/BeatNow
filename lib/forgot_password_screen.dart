@@ -66,7 +66,6 @@ class ForgotPasswordScreen extends StatelessWidget {
                 // Implement send password reset email logic
               },
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF3C0F4B),
                 padding: EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),

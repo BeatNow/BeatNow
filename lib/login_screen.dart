@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:flutter/gestures.dart'; // Necesario para TapGestureRecognizer
+import 'package:flutter/gestures.dart'; 
+import 'home_screen.dart'; // Importa el archivo donde está definida la clase HomeScreenState
 
 class LoginScreen extends StatelessWidget {
   final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
@@ -12,7 +13,6 @@ class LoginScreen extends StatelessWidget {
     
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
       
-      onPrimary: Colors.white,
       backgroundColor: Color(0xFF3C0F4B),
       minimumSize: Size(double.infinity, 56),
       padding: EdgeInsets.symmetric(vertical: 16),
@@ -85,7 +85,7 @@ class LoginScreen extends StatelessWidget {
                         onPressed: () {
                           // Añade la funcionalidad de olvidar contraseña aquí
                           // Acción para cambiar a la pestaña de registro
-                        _authController.changeTab(2);
+                          _authController.changeTab(2);
 
                         },
                         child: Text(
@@ -104,7 +104,10 @@ class LoginScreen extends StatelessWidget {
                 SizedBox(height: 80.0),
                 ElevatedButton(
                   child: Text('Sign In'),
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navega a la pestaña HomeScreenState
+                    _authController.changeTab(3);
+                  },
                   style: buttonStyle,
                 ),
                 SizedBox(height: 20.0),
