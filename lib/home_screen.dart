@@ -120,37 +120,38 @@ class _HomeScreenState extends State<HomeScreenState> {
   }
 
   Widget _buildCarousel(BuildContext context) {
-    List<String> imgList = [
-      'assets/images/image1.jpg',
-      'assets/images/image2.jpg',
-      'assets/images/image3.jpg',
-    ];
+  List<String> gifList = [
+    'http://172.203.251.28/gifanimado.gif',
+    'http://172.203.251.28/328a3c4a6ab4dd792415e6e2bbdd91bc.gif',
+    'http://172.203.251.28/tumblr_mo3f2iNLak1r5h04to1_500.gif',
+  ];
 
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: MediaQuery.of(context).size.height,
-        enlargeCenterPage: false,
-        autoPlay: false,
-        viewportFraction: 1.0,
-        scrollDirection: Axis.vertical,
-      ),
-      items: imgList.asMap().entries.map((entry) {
-        int index = entry.key;
-        String item = entry.value;
-        return Builder(
-          builder: (BuildContext context) {
-            return Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Image.asset(item, fit: BoxFit.cover, height: double.infinity),
-                _buildDynamicButtons(context, index),
-              ],
-            );
-          },
-        );
-      }).toList(),
-    );
-  }
+  return CarouselSlider(
+    options: CarouselOptions(
+      height: MediaQuery.of(context).size.height,
+      enlargeCenterPage: false,
+      autoPlay: false,
+      viewportFraction: 1.0,
+      scrollDirection: Axis.vertical,
+    ),
+    items: gifList.asMap().entries.map((entry) {
+      int index = entry.key;
+      String item = entry.value;
+      return Builder(
+        builder: (BuildContext context) {
+          return Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Image.network(item, fit: BoxFit.cover, height: double.infinity), // Usa Image.network para cargar un GIF desde una URL
+              _buildDynamicButtons(context, index),
+            ],
+          );
+        },
+      );
+    }).toList(),
+  );
+}
+
 
   Widget _buildDynamicButtons(BuildContext context, int index) {
     return Padding(
