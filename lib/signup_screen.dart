@@ -311,7 +311,7 @@ void registerOk() async {
 
 
 Future<Map<String, dynamic>> registerUser(String fullname, String email, String username, String password) async {
-  Uri apiUrl = Uri.parse('http://10.0.2.2:8001/api/v1/register');
+  Uri apiUrl = Uri.parse('http://217.182.70.161:8000/api/v1/register');
 
   Map<String, dynamic> body = {
     'fullname': fullname,

@@ -4,7 +4,7 @@ import 'forgot_password_screen.dart';
 import 'auth_controller.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
-import 'home_screen.dart'; // Importa el archivo donde está definida la clase HomeScreenState
+import 'home_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -40,7 +40,7 @@ class HomeScreen extends StatelessWidget {
       } else if (_authController.selectedIndex.value == 2) {
         return ForgotPasswordScreen();
       } else if (_authController.selectedIndex.value == 3) {
-        return HomeScreenState(); // Agrega la nueva pestaña HomeScreenState
+        return HomeScreenState();
       }
       return LoginScreen();
     });

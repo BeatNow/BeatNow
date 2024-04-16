@@ -181,7 +181,7 @@ void _login(String username, String password, BuildContext context) async {
 }
 
 Future<Map<String, dynamic>> loginUser(String username, String password) async {
-  Uri apiUrl = Uri.parse('http://10.0.2.2:8001/api/v1/login');
+  Uri apiUrl = Uri.parse('http://217.182.70.161:8000/api/v1/login');
 
   Map<String, dynamic> body = {
     'username': username,
