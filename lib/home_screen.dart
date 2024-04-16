@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'auth_controller.dart';
 
 class HomeScreenState extends StatefulWidget {
+  // Obtener instancia del controlador AuthController
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreenState> {
+  final AuthController _authController = Get.find<AuthController>(); 
   int _selectedIndex = 1;
 
   List<bool> _liked = [false, false, false];
@@ -22,7 +27,9 @@ class _HomeScreenState extends State<HomeScreenState> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.person, color: Colors.white),
-          onPressed: () {},
+          onPressed: () {
+            _authController.changeTab(4);
+          },
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,

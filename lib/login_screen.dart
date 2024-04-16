@@ -106,6 +106,7 @@ class LoginScreen extends StatelessWidget {
                   child: Text('Sign In'),
                   onPressed: () {
                     // Navega a la pestaña HomeScreenState
+                    //_authController.changeTab(3);
                     _login(_usernameController.text, _passwordController.text, context);
                   },
                   style: buttonStyle,
@@ -181,7 +182,7 @@ void _login(String username, String password, BuildContext context) async {
 }
 
 Future<Map<String, dynamic>> loginUser(String username, String password) async {
-  Uri apiUrl = Uri.parse('http://217.182.70.161:8000/api/v1/login');
+  Uri apiUrl = Uri.parse('http://217.182.70.161:6969/api/v1/login');
 
   Map<String, dynamic> body = {
     'username': username,

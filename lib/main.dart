@@ -4,7 +4,8 @@ import 'forgot_password_screen.dart';
 import 'auth_controller.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
-import 'home_screen.dart';
+import 'profileuser_screen.dart';
+import 'home_screen.dart'; // Import ProfileScreen
 
 void main() => runApp(MyApp());
 
@@ -33,16 +34,20 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (_authController.selectedIndex.value == 0) {
-        return LoginScreen();
-      } else if (_authController.selectedIndex.value == 1) {
-        return SignUpScreen();
-      } else if (_authController.selectedIndex.value == 2) {
-        return ForgotPasswordScreen();
-      } else if (_authController.selectedIndex.value == 3) {
-        return HomeScreenState();
+      switch (_authController.selectedIndex.value) {
+        case 0:
+          return LoginScreen();
+        case 1:
+          return SignUpScreen();
+        case 2:
+          return ForgotPasswordScreen();
+        case 3:
+          return HomeScreenState();
+        case 4:
+          return ProfileScreen(); // Add this case
+        default:
+          return LoginScreen();
       }
-      return LoginScreen();
     });
   }
 }
