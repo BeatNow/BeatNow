@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'auth_controller.dart'; // Adjust the import according to your project structure
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
 
 void main() {
   runApp(MyApp());
@@ -19,8 +24,79 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = Get.find<AuthController>();
+  bool _hasProfileImage = false; // Cambiado a falso inicialmente
+  String? _profileImagePath; // Ruta de la imagen de perfil
+
+  // Function to handle when the profile image is clicked
+  void _onProfileImageClicked(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.camera),
+                title: Text('Take Photo'),
+                onTap: () async {
+                  Navigator.pop(context); // Close the bottom sheet
+                  // Add logic to take photo
+                  final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _profileImagePath = pickedFile.path;
+                      _hasProfileImage = true;
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo),
+                title: Text('Choose from Gallery'),
+                onTap: () async {
+                  Navigator.pop(context); // Close the bottom sheet
+                  // Check and request permission to access gallery
+                  await Permission.photos.request();
+                  final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _profileImagePath = pickedFile.path;
+                      _hasProfileImage = true;
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                title: Text('Remove Profile Photo'),
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  // Add logic to remove profile photo
+                  setState(() {
+                    _profileImagePath = null;
+                    _hasProfileImage = false;
+                  });
+                },
+              ),
+              ListTile(
+                title: Text('Cancel'),
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +117,14 @@ class ProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage(
-                  'assets/images/profile.jpg'), // Usa AssetImage para cargar una imagen de los recursos locales
+            GestureDetector(
+              onTap: () => _onProfileImageClicked(context),
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: _hasProfileImage
+                    ? FileImage(File(_profileImagePath!)) // Cambiado a FileImage
+                    : AssetImage('assets/images/default_profile.jpg') as ImageProvider<Object>, // Convertido a ImageProvider<Object>
+              ),
             ),
             SizedBox(height: 20.0),
             Text('@mortizaug'),

@@ -16,6 +16,8 @@ dependencies:
   carousel_slider: ^4.0.0
   http: ^1.2.1
   audioplayers: ^6.0.0
+  image_picker: ^0.8.4+4
+  permission_handler: ^11.2.0
 
 dev_dependencies:
   flutter_test:

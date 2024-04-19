@@ -123,8 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text('Sign In'),
                   onPressed: () {
                     // Navega a la pestaña HomeScreenState
-                    //_authController.changeTab(3);
-                    _login(_usernameController.text, _passwordController.text, context);
+                    _authController.changeTab(3);
+                    //_login(_usernameController.text, _passwordController.text, context);
                   },
                   style: buttonStyle,
                 ),
