@@ -6,10 +6,17 @@ import 'auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart'; 
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +75,7 @@ class LoginScreen extends StatelessWidget {
                   children: [
                     TextField(
                       style: TextStyle(color: Colors.white),
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Password',
                         hintStyle: TextStyle(color: Colors.white70),
@@ -77,6 +84,16 @@ class LoginScreen extends StatelessWidget {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                           borderSide: BorderSide.none,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            // Cambiar el estado de _obscurePassword para alternar entre mostrar u ocultar la contraseña
+                            _togglePasswordVisibility();
+                          },
                         ),
                       ),
                       controller: _passwordController,
@@ -154,52 +171,60 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-void _login(String username, String password, BuildContext context) async {
-  // Verificar si los campos de nombre de usuario y contraseña no están vacíos
-  if (username.isEmpty || password.isEmpty) {
-    _showErrorSnackBar('Username and password are required.', context);
-    return;
+  void _togglePasswordVisibility() {
+    // Cambiar el estado de _obscurePassword para alternar entre mostrar u ocultar la contraseña
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
   }
 
-  try {
-    // Llamar a la función para iniciar sesión
-    final Map<String, dynamic> response = await loginUser(username, password);
-    
-    // Manejar la respuesta del servidor
-    if (response.containsKey('message')) {
-      // Si la respuesta contiene la clave 'message', el inicio de sesión fue exitoso
-      _showErrorSnackBar('Login successful!', context);
-      // Aquí puedes manejar la lógica para redirigir al usuario a otra pantalla o realizar otras acciones necesarias después del inicio de sesión exitoso
-      _authController.changeTab(3);
-    } else {
-      // Si la respuesta no contiene 'message', mostrar un mensaje de error basado en el detalle proporcionado por el servidor
-      _showErrorSnackBar(response['detail'], context);
+
+  void _login(String username, String password, BuildContext context) async {
+    // Verificar si los campos de nombre de usuario y contraseña no están vacíos
+    if (username.isEmpty || password.isEmpty) {
+      _showErrorSnackBar('Username and password are required.', context);
+      return;
     }
-  } catch (e) {
-    // Capturar cualquier excepción que pueda ocurrir durante el proceso de inicio de sesión
-    _showErrorSnackBar('Failed to login: $e', context);
+
+    try {
+      // Llamar a la función para iniciar sesión
+      final Map<String, dynamic> response = await loginUser(username, password);
+      
+      // Manejar la respuesta del servidor
+      if (response.containsKey('message')) {
+        // Si la respuesta contiene la clave 'message', el inicio de sesión fue exitoso
+        _showErrorSnackBar('Login successful!', context);
+        // Aquí puedes manejar la lógica para redirigir al usuario a otra pantalla o realizar otras acciones necesarias después del inicio de sesión exitoso
+        _authController.changeTab(3);
+      } else {
+        // Si la respuesta no contiene 'message', mostrar un mensaje de error basado en el detalle proporcionado por el servidor
+        _showErrorSnackBar(response['detail'], context);
+      }
+    } catch (e) {
+      // Capturar cualquier excepción que pueda ocurrir durante el proceso de inicio de sesión
+      _showErrorSnackBar('Failed to login: $e', context);
+    }
   }
-}
 
-Future<Map<String, dynamic>> loginUser(String username, String password) async {
-  Uri apiUrl = Uri.parse('http://217.182.70.161:6969/api/v1/login');
+  Future<Map<String, dynamic>> loginUser(String username, String password) async {
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/api/v1/login');
 
-  Map<String, dynamic> body = {
-    'username': username,
-    'password': password,
-  };
+    Map<String, dynamic> body = {
+      'username': username,
+      'password': password,
+    };
 
-  final http.Response response = await http.post(
-    apiUrl,
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(body),
-  );
+    final http.Response response = await http.post(
+      apiUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(body),
+    );
 
-  // Decodificar y devolver la respuesta del servidor
-  return json.decode(response.body);
-}
+    // Decodificar y devolver la respuesta del servidor
+    return json.decode(response.body);
+  }
 
 
   void _showErrorSnackBar(String message, BuildContext context) {
