@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:BeatNow/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,6 +32,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = Get.find<AuthController>();
+  final userSingleton = UserSingleton(); 
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
 
@@ -49,7 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   Navigator.pop(context); // Close the bottom sheet
                   // Add logic to take photo
-                  final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+                  final pickedFile =
+                      await ImagePicker().getImage(source: ImageSource.camera);
                   if (pickedFile != null) {
                     setState(() {
                       _profileImagePath = pickedFile.path;
@@ -65,7 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.pop(context); // Close the bottom sheet
                   // Check and request permission to access gallery
                   await Permission.photos.request();
-                  final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+                  final pickedFile =
+                      await ImagePicker().getImage(source: ImageSource.gallery);
                   if (pickedFile != null) {
                     setState(() {
                       _profileImagePath = pickedFile.path;
@@ -75,12 +79,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               ),
               ListTile(
+                leading: Icon(Icons.delete),
                 title: Text('Remove Profile Photo'),
                 onTap: () {
                   Navigator.pop(context); // Close the bottom sheet
-                  // Add logic to remove profile photo
                   setState(() {
-                    _profileImagePath = null;
+                    _profileImagePath =
+                        'http://172.203.251.28/beatnow/res/defaultProfile.jpg';
                     _hasProfileImage = false;
                   });
                 },
@@ -109,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Get.back(); // or Navigator.pop(context) if not using GetX
           },
         ),
-        title: Text('Martí Ortiz'),
+        title: Text(UserSingleton().name),
         actions: [
           IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
         ],
@@ -122,12 +127,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: _hasProfileImage
-                    ? FileImage(File(_profileImagePath!)) // Cambiado a FileImage
-                    : AssetImage('assets/images/default_profile.jpg') as ImageProvider<Object>, // Convertido a ImageProvider<Object>
+                    ? FileImage(
+                        File(_profileImagePath!)) // Cambiado a FileImage
+                    : AssetImage('assets/images/default_profile.jpg')
+                        as ImageProvider<
+                            Object>, // Convertido a ImageProvider<Object>
               ),
             ),
             SizedBox(height: 20.0),
-            Text('@mortizaug'),
+            Text('@'+UserSingleton().username),
             SizedBox(height: 20.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

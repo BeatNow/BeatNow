@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:BeatNow/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -123,8 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text('Sign In'),
                   onPressed: () {
                     // Navega a la pestaña HomeScreenState
-                    _authController.changeTab(3);
-                    //_login(_usernameController.text, _passwordController.text, context);
+                    //_authController.changeTab(3);
+                    _login(_usernameController.text, _passwordController.text, context);
                   },
                   style: buttonStyle,
                 ),
@@ -207,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<Map<String, dynamic>> loginUser(String username, String password) async {
-    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/api/v1/login');
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/login');
 
     Map<String, dynamic> body = {
       'username': username,
@@ -238,4 +239,35 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+Future<void> getUserInfo() async {
+  try {
+    // Define the API URL
+    final apiUrl = Uri.parse('http://217.182.70.161:8001/v1/api/users/users/me');
+    // Fetch user information from the API
+    final response = await http.get(apiUrl);
+
+    // Check if the response status code is 200 (success)
+    if (response.statusCode == 200) {
+      // Decode the response body from JSON
+      final userData = json.decode(response.body);
+
+      // Process the user data
+      processUserData(userData);
+    } else {
+      // If the response status code is not 200, throw an exception
+      throw Exception('Failed to fetch user information. Status code: ${response.statusCode}');
+    }
+  } catch (error) {
+    // Catch any errors that occur during the process
+    print('Error fetching user information: $error');
+  }
+}
+
+void processUserData(Map<String, dynamic> userData) {
+  // Add your logic to process the user data here
+  UserSingleton().name = userData['name'];
+  UserSingleton().username = userData['username'];
+  UserSingleton().email = userData['email'];
+}
 }
