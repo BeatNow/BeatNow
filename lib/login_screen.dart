@@ -6,10 +6,17 @@ import 'auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart'; 
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +75,7 @@ class LoginScreen extends StatelessWidget {
                   children: [
                     TextField(
                       style: TextStyle(color: Colors.white),
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Password',
                         hintStyle: TextStyle(color: Colors.white70),
@@ -77,6 +84,10 @@ class LoginScreen extends StatelessWidget {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                           borderSide: BorderSide.none,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: _togglePasswordVisibility,
                         ),
                       ),
                       controller: _passwordController,
@@ -153,56 +164,61 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-void _login(String username, String password, BuildContext context) async {
-  // Verificar si los campos de nombre de usuario y contraseña no están vacíos
-  if (username.isEmpty || password.isEmpty) {
-    _showErrorSnackBar('Username and password are required.', context);
-    return;
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
   }
 
-  // Realizar la petición de inicio de sesión
-  final response = await loginUser(username, password);
+  void _login(String username, String password, BuildContext context) async {
+    // Verificar si los campos de nombre de usuario y contraseña no están vacíos
+    if (username.isEmpty || password.isEmpty) {
+      _showErrorSnackBar('Username and password are required.', context);
+      return;
+    }
 
-  // Verificar si la petición fue exitosa
-  if (response['message'] == 'ok') {
+    // Realizar la petición de inicio de sesión
+    final response = await loginUser(username, password);
 
-    // Navegar a la pestaña HomeScreenState
-    _authController.changeTab(3);
-  } else {
-    // Mostrar un mensaje de error si la petición falla
-    _showErrorSnackBar(response['message'], context);
+    // Verificar si la petición fue exitosa
+    if (response['message'] == 'ok') {
+      // Navegar a la pestaña HomeScreenState
+      _authController.changeTab(3);
+    } else {
+      // Mostrar un mensaje de error si la petición falla
+      _showErrorSnackBar(response['message'], context);
+    }
   }
-}
 
-Future<Map<String, dynamic>> loginUser(String username, String password) async {
-  final apiUrl = Uri.parse('http://217.182.70.161:6969/login');
-  
-  final body = {
-    'username': username,
-    'password': password,
-  };
+  Future<Map<String, dynamic>> loginUser(String username, String password) async {
+    final apiUrl = Uri.parse('http://217.182.70.161:6969/login');
+    
+    final body = {
+      'username': username,
+      'password': password,
+    };
 
-  final response = await http.post(
-    apiUrl,
-    headers: <String, String>{
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: body,
-  );
+    final response = await http.post(
+      apiUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body,
+    );
 
-  // Decodificar y devolver la respuesta del servidor
-  return json.decode(response.body);
-}
+    // Decodificar y devolver la respuesta del servidor
+    return json.decode(response.body);
+  }
 
-void _showErrorSnackBar(String message, BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        message,
-        style: TextStyle(color: Colors.white),
+  void _showErrorSnackBar(String message, BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF3C0F4B),
       ),
-      backgroundColor: Color(0xFF3C0F4B),
-    ),
-  );
-}
+    );
+  }
 }
