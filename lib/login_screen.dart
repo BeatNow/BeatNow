@@ -160,28 +160,19 @@ void _login(String username, String password, BuildContext context) async {
     return;
   }
 
-  try {
-    // Llamar a la función para iniciar sesión
-    final Map<String, dynamic> response = await loginUser(username, password);
+  // Realizar la petición de inicio de sesión
+  final response = await loginUser(username, password);
 
-    // Verificar si la respuesta contiene la clave 'message' y su valor es 'ok'
-    if (response.containsKey('message') && response['message'] == 'ok') {
-      _showErrorSnackBar('Login successful!', context);
-      // Aquí puedes manejar la lógica para redirigir al usuario a otra pantalla o realizar otras acciones necesarias después del inicio de sesión exitoso
-      _authController.changeTab(3);
-    } else {
-      // Si la respuesta no contiene 'message' o el valor no es 'ok', mostrar un mensaje de error basado en el contenido de la respuesta
-      final errorMessage = response.containsKey('detail') ? response['detail'] : 'Unexpected response from server';
-      _showErrorSnackBar(errorMessage, context);
-    }
-  } catch (e) {
-    // Capturar cualquier excepción que pueda ocurrir durante el proceso de inicio de sesión
-    _showErrorSnackBar('Failed to login: $e', context);
+  // Verificar si la petición fue exitosa
+  if (response['message'] == 'ok') {
+
+    // Navegar a la pestaña HomeScreenState
+    _authController.changeTab(3);
+  } else {
+    // Mostrar un mensaje de error si la petición falla
+    _showErrorSnackBar(response['message'], context);
   }
 }
-
-
-
 
 Future<Map<String, dynamic>> loginUser(String username, String password) async {
   final apiUrl = Uri.parse('http://217.182.70.161:6969/login');
@@ -203,16 +194,15 @@ Future<Map<String, dynamic>> loginUser(String username, String password) async {
   return json.decode(response.body);
 }
 
-
-  void _showErrorSnackBar(String message, BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Color(0xFF3C0F4B),
+void _showErrorSnackBar(String message, BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message,
+        style: TextStyle(color: Colors.white),
       ),
-    );
-  }
+      backgroundColor: Color(0xFF3C0F4B),
+    ),
+  );
+}
 }
