@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:BeatNow/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -87,14 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {
-                            // Cambiar el estado de _obscurePassword para alternar entre mostrar u ocultar la contraseña
-                            _togglePasswordVisibility();
-                          },
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: _togglePasswordVisibility,
                         ),
                       ),
                       controller: _passwordController,
@@ -124,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text('Sign In'),
                   onPressed: () {
                     // Navega a la pestaña HomeScreenState
-                    //_authController.changeTab(3);
                     _login(_usernameController.text, _passwordController.text, context);
                   },
                   style: buttonStyle,
@@ -173,12 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _togglePasswordVisibility() {
-    // Cambiar el estado de _obscurePassword para alternar entre mostrar u ocultar la contraseña
     setState(() {
       _obscurePassword = !_obscurePassword;
     });
   }
-
 
   void _login(String username, String password, BuildContext context) async {
     // Verificar si los campos de nombre de usuario y contraseña no están vacíos
@@ -187,46 +177,38 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    try {
-      // Llamar a la función para iniciar sesión
-      final Map<String, dynamic> response = await loginUser(username, password);
-      
-      // Manejar la respuesta del servidor
-      if (response.containsKey('message')) {
-        // Si la respuesta contiene la clave 'message', el inicio de sesión fue exitoso
-        _showErrorSnackBar('Login successful!', context);
-        // Aquí puedes manejar la lógica para redirigir al usuario a otra pantalla o realizar otras acciones necesarias después del inicio de sesión exitoso
-        _authController.changeTab(3);
-      } else {
-        // Si la respuesta no contiene 'message', mostrar un mensaje de error basado en el detalle proporcionado por el servidor
-        _showErrorSnackBar(response['detail'], context);
-      }
-    } catch (e) {
-      // Capturar cualquier excepción que pueda ocurrir durante el proceso de inicio de sesión
-      _showErrorSnackBar('Failed to login: $e', context);
+    // Realizar la petición de inicio de sesión
+    final response = await loginUser(username, password);
+
+    // Verificar si la petición fue exitosa
+    if (response['message'] == 'ok') {
+      // Navegar a la pestaña HomeScreenState
+      _authController.changeTab(3);
+    } else {
+      // Mostrar un mensaje de error si la petición falla
+      _showErrorSnackBar(response['message'], context);
     }
   }
 
   Future<Map<String, dynamic>> loginUser(String username, String password) async {
-    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/login');
-
-    Map<String, dynamic> body = {
+    final apiUrl = Uri.parse('http://217.182.70.161:6969/login');
+    
+    final body = {
       'username': username,
       'password': password,
     };
 
-    final http.Response response = await http.post(
+    final response = await http.post(
       apiUrl,
       headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: jsonEncode(body),
+      body: body,
     );
 
     // Decodificar y devolver la respuesta del servidor
     return json.decode(response.body);
   }
-
 
   void _showErrorSnackBar(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -239,35 +221,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-Future<void> getUserInfo() async {
-  try {
-    // Define the API URL
-    final apiUrl = Uri.parse('http://217.182.70.161:8001/v1/api/users/users/me');
-    // Fetch user information from the API
-    final response = await http.get(apiUrl);
-
-    // Check if the response status code is 200 (success)
-    if (response.statusCode == 200) {
-      // Decode the response body from JSON
-      final userData = json.decode(response.body);
-
-      // Process the user data
-      processUserData(userData);
-    } else {
-      // If the response status code is not 200, throw an exception
-      throw Exception('Failed to fetch user information. Status code: ${response.statusCode}');
-    }
-  } catch (error) {
-    // Catch any errors that occur during the process
-    print('Error fetching user information: $error');
-  }
-}
-
-void processUserData(Map<String, dynamic> userData) {
-  // Add your logic to process the user data here
-  UserSingleton().name = userData['name'];
-  UserSingleton().username = userData['username'];
-  UserSingleton().email = userData['email'];
-}
 }
