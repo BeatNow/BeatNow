@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:BeatNow/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:flutter/gestures.dart'; 
+import 'package:flutter/gestures.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -12,7 +13,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
+  final AuthController _authController = Get.find<
+      AuthController>(); // Obtener instancia del controlador AuthController
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -47,12 +49,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Welcome Back!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Franklin Gothic Demi'),
+                  style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'Franklin Gothic Demi'),
                 ),
                 Text(
                   'Please sign into your account',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16.0, color: Color(0xFF494949), fontFamily: 'Franklin Gothic Demi'),
+                  style: TextStyle(
+                      fontSize: 16.0,
+                      color: Color(0xFF494949),
+                      fontFamily: 'Franklin Gothic Demi'),
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.12),
                 TextField(
@@ -86,7 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(_obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility),
                           onPressed: _togglePasswordVisibility,
                         ),
                       ),
@@ -117,14 +128,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text('Sign In'),
                   onPressed: () {
                     // Navega a la pestaña HomeScreenState
-                    _login(_usernameController.text, _passwordController.text, context);
+                    _login(_usernameController.text, _passwordController.text,
+                        context);
                   },
                   style: buttonStyle,
                 ),
                 SizedBox(height: 20.0),
                 ElevatedButton.icon(
                   icon: FaIcon(FontAwesomeIcons.google, color: Colors.black),
-                  label: Text('Sign in with Google', style: TextStyle(color: Colors.black)),
+                  label: Text('Sign in with Google',
+                      style: TextStyle(color: Colors.black)),
                   onPressed: () {},
                   style: buttonStyle.copyWith(
                     backgroundColor: MaterialStateProperty.all(Colors.white),
@@ -136,7 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: Text('Sign in with Facebook'),
                   onPressed: () {},
                   style: buttonStyle.copyWith(
-                    backgroundColor: MaterialStateProperty.all(Colors.blueAccent),
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.blueAccent),
                   ),
                 ),
                 SizedBox(height: 40.0),
@@ -148,10 +162,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: <TextSpan>[
                       TextSpan(
                         text: 'Sign Up',
-                        style: TextStyle(decoration: TextDecoration.underline, color: Color(0xFF4E0566)),
-                        recognizer: TapGestureRecognizer()..onTap = () {
-                          _authController.changeTab(1); // Acción para cambiar a la pestaña de registro
-                        },
+                        style: TextStyle(
+                            decoration: TextDecoration.underline,
+                            color: Color(0xFF4E0566)),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            _authController.changeTab(
+                                1); // Acción para cambiar a la pestaña de registro
+                          },
                       ),
                     ],
                   ),
@@ -171,28 +189,28 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login(String username, String password, BuildContext context) async {
-    // Verificar si los campos de nombre de usuario y contraseña no están vacíos
-    if (username.isEmpty || password.isEmpty) {
-      _showErrorSnackBar('Username and password are required.', context);
-      return;
-    }
+  // Obtener el token de acceso
+  final token = await _token(username, password, context);
 
-    // Realizar la petición de inicio de sesión
-    final response = await loginUser(username, password);
+  if (token != null) {
+    // Obtener información del usuario usando el token
+    final userInfo = await getUserInfo(token);
 
-    // Verificar si la petición fue exitosa
-    if (response['message'] == 'ok') {
+    if (userInfo != null) {
       // Navegar a la pestaña HomeScreenState
       _authController.changeTab(3);
     } else {
-      // Mostrar un mensaje de error si la petición falla
-      _showErrorSnackBar(response['message'], context);
+      // Mostrar mensaje de error si no se pudo obtener la información del usuario
+      _showErrorSnackBar('Failed to get user info' , context);
     }
+  } else {
+    // Mostrar mensaje de error si no se pudo obtener el token de acceso
+    _showErrorSnackBar('Failed to get access token' , context);
   }
+}
+  Future<Map<String, dynamic>> getTokenUser(String username, String password) async {
+    final apiUrl = Uri.parse('http://217.182.70.161:6969/token');
 
-  Future<Map<String, dynamic>> loginUser(String username, String password) async {
-    final apiUrl = Uri.parse('http://217.182.70.161:6969/login');
-    
     final body = {
       'username': username,
       'password': password,
@@ -210,6 +228,61 @@ class _LoginScreenState extends State<LoginScreen> {
     return json.decode(response.body);
   }
 
+
+Future<String?> _token(String username, String password, BuildContext context) async {
+  final response = await getTokenUser(username, password);
+
+  if (response["access_token"] != null) {
+    // Actualizar el token de acceso en UserSingleton
+    UserSingleton().token = response["access_token"];
+    String token = response["access_token"];
+    return token;
+  } else {
+    // Mostrar mensaje de error si la petición falla
+    _showErrorSnackBar(response[""], context);
+    return null;
+  }
+}
+
+Future<Map<String, dynamic>?> getUserInfo(String token) async {
+  final apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/users/me');
+
+  try {
+    final response = await http.get(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.body.isNotEmpty) {
+      final jsonResponse = jsonDecode(response.body);
+      UserSingleton().name = jsonResponse['full_name'];
+      UserSingleton().username = jsonResponse['username'];
+      UserSingleton().email = jsonResponse['email'];
+      return jsonResponse;
+    }
+    else if(response.statusCode == 401){
+      // Mostrar mensaje de error si la solicitud falla
+      print('Request failed with status: ${response.statusCode}.');
+      return null;
+    }
+    else {
+      // Mostrar mensaje de error si la solicitud falla
+      print('Request failed with status: ${response.statusCode}.');
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
+    }
+  } catch (e) {
+    // Mostrar mensaje de error si se produce una excepción
+    print('Error: $e');
+    return null;
+  }
+}
+
+
+  // Función para mostrar un SnackBar con un mensaje de error
   void _showErrorSnackBar(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

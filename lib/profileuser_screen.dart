@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundImage: _hasProfileImage
                     ? FileImage(
                         File(_profileImagePath!)) // Cambiado a FileImage
-                    : AssetImage('assets/images/default_profile.jpg')
+                    : NetworkImage(UserSingleton().profileImageUrl)
                         as ImageProvider<
                             Object>, // Convertido a ImageProvider<Object>
               ),
@@ -184,4 +184,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
+
+  
+
+
 }
