@@ -4,7 +4,9 @@ class UserSingleton {
   late String _name = '';
   late String _username = '';
   late String _email = '';
-  late String _profileImageUrl = '';
+ late String _profileImageUrl = 'http://172.203.251.28/beatnow/' + _username + '/photo_profile/photo_profile.png';
+ late String _defaultProfileImageUrl = 'http://172.203.251.28/beatnow/default/default_photo.png';
+  late String _token = '';
 
   factory UserSingleton() {
     return _instance;
@@ -16,6 +18,9 @@ class UserSingleton {
   String get username => _username;
   String get email => _email;
   String get profileImageUrl => _profileImageUrl;
+  String get defaultProfileImageUrl => _defaultProfileImageUrl;
+  String get token => _token;
+  
 
   set name(String value) {
     _name = value;
@@ -31,5 +36,12 @@ class UserSingleton {
 
   set profileImageUrl(String value) {
     _profileImageUrl = value;
+  }
+
+  set defaultProfileImageUrl(String value) {
+    _defaultProfileImageUrl = value;
+  }
+  set token(String value) {
+    _token = value;
   }
 }
