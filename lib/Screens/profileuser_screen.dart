@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:BeatNow/UserSingleton.dart';
+import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
+import '../Controllers/auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
 
 void main() {
   runApp(MyApp());
