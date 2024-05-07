@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../Controllers/auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -136,21 +140,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 20.0),
                 ElevatedButton.icon(
                   icon: FaIcon(FontAwesomeIcons.google, color: Colors.black),
-                  label: Text('Sign in with Google',
+                  label: Text('Continue with Google',
                       style: TextStyle(color: Colors.black)),
-                  onPressed: () {},
+                  onPressed: () {
+                    signInWithGoogle(context);
+                  },
                   style: buttonStyle.copyWith(
                     backgroundColor: MaterialStateProperty.all(Colors.white),
-                  ),
-                ),
-                SizedBox(height: 20.0),
-                ElevatedButton.icon(
-                  icon: FaIcon(FontAwesomeIcons.facebookF, color: Colors.white),
-                  label: Text('Sign in with Facebook'),
-                  onPressed: () {},
-                  style: buttonStyle.copyWith(
-                    backgroundColor:
-                        MaterialStateProperty.all(Colors.blueAccent),
                   ),
                 ),
                 SizedBox(height: 40.0),
@@ -294,4 +290,85 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
       ),
     );
   }
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+
+Future<User?> signInWithGoogle(BuildContext context) async {
+    try {
+
+      await GoogleSignIn().signOut();
+
+      // Sign in with Google
+      final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
+
+      if (gUser == null) {
+        // El usuario canceló el inicio de sesión
+        return null;
+      }
+
+      final GoogleSignInAuthentication gAuth = await gUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: gAuth.accessToken,
+        idToken: gAuth.idToken,
+      );
+
+      // Autenticar con Firebase Auth
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      
+      // Si la autenticación fue exitosa, navegar a la pantalla de inicio
+     if (userCredential.user != null) {
+
+        String fullName = gUser.displayName ?? '';
+        String email = gUser.email ?? '';
+        String username = gUser.email.split('@')[0]; // Supongamos que el nombre de usuario es la parte antes del '@' en el correo electrónico
+        String password = 'GoogleAccount123!';
+
+        String photo = gUser.photoUrl ?? '';
+
+        try {
+          // Intentar registrar al usuario
+          await registerUser(fullName, email, username, password);
+        } catch (e) {
+          // Si hay una excepción al registrar al usuario, solo inicia sesión
+         print('El usuario ya esta registrado, procediendo a iniciar sesión.');
+        }
+        _login(username, password, context);
+
+    } 
+
+      return userCredential.user;
+    } catch (e) {
+      // Manejar errores aquí, como problemas de conexión o de autenticación
+      print("Error en el inicio de sesión con Google: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> registerUser(String fullname, String email, String username, String password) async {
+  Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/register');
+
+  Map<String, dynamic> body = {
+    'full_name': fullname,
+    'email': email,
+    'username': username,
+    'password': password,
+  };
+
+  final http.Response response = await http.post(
+    apiUrl,
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(body),
+  );
+
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+  } else {
+    throw Exception('Failed to register user: ${response.body}');
+  }
+}
 }

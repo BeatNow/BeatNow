@@ -6,8 +6,16 @@ import '../Screens/login_screen.dart';
 import '../Screens/signup_screen.dart';
 import '../Screens/profileuser_screen.dart';
 import '../Screens/home_screen.dart';// Import ProfileScreen
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override

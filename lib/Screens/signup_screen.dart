@@ -6,7 +6,9 @@ import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-import '../Controllers/auth_controller.dart'; // Importa el controlador AuthController
+
+import '../Controllers/auth_controller.dart';
+
 
 void main() => runApp(MyApp());
 
@@ -198,26 +200,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                   style: buttonStyle,
                 ),
-                SizedBox(height: 20.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () {
-                        // Implement Twitter sign up logic
-                      },
-                      style: socialButtonStyle,
-                      child: FaIcon(FontAwesomeIcons.twitter, color: Colors.white, size: 32.0),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Implement Google sign up logic
-                      },
-                      style: socialButtonStyle,
-                      child: FaIcon(FontAwesomeIcons.google, color: Colors.white, size: 32.0),
-                    ),
-                  ],
-                ),
                 SizedBox(height: 40.0),
                 RichText(
                   textAlign: TextAlign.center,
@@ -246,6 +228,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
+  
 
   // Función para comprobar los campos del registro
   void _register(TextEditingController fullNameController, TextEditingController usernameController, TextEditingController emailController, TextEditingController passwordController, TextEditingController confirmPasswordController) {
@@ -334,5 +318,6 @@ Future<Map<String, dynamic>> registerUser(String fullname, String email, String 
     throw Exception('Failed to register user: ${response.body}');
   }
 }
+
 
 }
