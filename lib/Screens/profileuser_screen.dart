@@ -1,12 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:http/http.dart' as http;
 import '../Controllers/auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
 import 'package:BeatNow/Models/UserSingleton.dart';
+import 'package:http_parser/http_parser.dart';
 
 void main() {
   runApp(MyApp());
@@ -51,12 +54,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   Navigator.pop(context); // Close the bottom sheet
                   // Add logic to take photo
-                  final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+                  final pickedFile =
+                      await ImagePicker().getImage(source: ImageSource.camera);
                   if (pickedFile != null) {
-                    setState(() {
-                      _profileImagePath = pickedFile.path;
-                      _hasProfileImage = true;
-                    });
+                    File imageFile =
+                        File(pickedFile.path); // Convierte XFile a File aquí
+                    changePhoto(
+                        imageFile); 
                   }
                 },
               ),
@@ -64,15 +68,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 leading: Icon(Icons.photo),
                 title: Text('Choose from Gallery'),
                 onTap: () async {
-                  Navigator.pop(context); // Close the bottom sheet
-                  // Check and request permission to access gallery
-                  await Permission.photos.request();
-                  final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+                  Navigator.pop(context); // Cierra la hoja inferior
+                  // Solicita permiso para acceder a la galería
+
+                  final ImagePicker picker = ImagePicker();
+                  final XFile? pickedFile =
+                      await picker.pickImage(source: ImageSource.gallery);
+
                   if (pickedFile != null) {
-                    setState(() {
-                      _profileImagePath = pickedFile.path;
-                      _hasProfileImage = true;
-                    });
+                    File imageFile =
+                        File(pickedFile.path); // Convierte XFile a File aquí
+                    changePhoto(
+                        imageFile); // Llama a changePhoto con el archivo
                   }
                 },
               ),
@@ -80,11 +87,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 leading: Icon(Icons.delete),
                 title: Text('Remove Profile Photo'),
                 onTap: () {
-                  Navigator.pop(context); // Close the bottom sheet
-                  setState(() {
-                    _profileImagePath = 'http://172.203.251.28/beatnow/res/defaultProfile.jpg';
-                    _hasProfileImage = false;
-                  });
+                  Navigator.pop(context);
+                  deletePhoto();
                 },
               ),
               ListTile(
@@ -112,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
         title: Text(
-          "@"+UserSingleton().username,
+          "@" + UserSingleton().username,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -144,9 +148,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () => _onProfileImageClicked(context),
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage: _hasProfileImage
-                        ? FileImage(File(_profileImagePath!)) // Cambiado a FileImage
-                        : NetworkImage(UserSingleton().profileImageUrl) as ImageProvider<Object>, // Convertido a ImageProvider<Object>
+                    backgroundImage: NetworkImage(
+                      "${UserSingleton().profileImageUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                    ),
                   ),
                 ),
                 SizedBox(width: 20),
@@ -231,7 +235,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return Container(
                     color: Colors.grey, // Color de fondo temporal
                     child: Center(
-                      child: Text('Item $index', style: TextStyle(color: Colors.white)),
+                      child: Text('Item $index',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   );
                 },
@@ -250,14 +255,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: <Widget>[
         Text(
           count,
-          style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w400, color: Colors.white),
+          style: TextStyle(
+              fontSize: 16.0, fontWeight: FontWeight.w400, color: Colors.white),
         ),
       ],
     );
   }
-}
 
+  Future<void> deletePhoto() async {
+    Uri apiUrl = Uri.parse(
+        'http://217.182.70.161:6969/v1/api/users/delete_photo_profile');
+    final token = UserSingleton().token;
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Clear profile photo data
+        setState(() {
+          _hasProfileImage = false;
+          _profileImagePath = '';
+        });
+      } else {
+        throw Exception('Failed to delete profile photo: ${response.body}');
+      }
+    } catch (error) {
+      print('Error deleting profile photo: $error');
+      // Handle error appropriately, like showing a snackbar or dialog
+    }
+  }
+
+  Future<void> changePhoto(File photo) async {
+    Uri apiUrl = Uri.parse(
+        'http://217.182.70.161:6969/v1/api/users/change_photo_profile');
+    final token = UserSingleton().token;
+
+    try {
+      var request = http.MultipartRequest('POST', apiUrl)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..headers['Content-Type'] = 'multipart/form-data'
+        ..files.add(await http.MultipartFile.fromPath('file', photo.path,
+            contentType: MediaType('image', 'jpeg')));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        print('Image uploaded successfully');
+        setState(() {
+          _hasProfileImage = false;
+          _profileImagePath = '';
+        });
+        // Leer y procesar la respuesta si es necesario
+        final respStr = await response.stream.bytesToString();
+        print(respStr);
+      } else {
+        print('Failed to upload image: ${response.reasonPhrase}');
+      }
+    } catch (error) {
+      print('Error uploading image: $error');
+    }
+  }
+}

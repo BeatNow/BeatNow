@@ -235,7 +235,7 @@ Future<String?> _token(String username, String password, BuildContext context) a
     return token;
   } else {
     // Mostrar mensaje de error si la petición falla
-    _showErrorSnackBar(response[""], context);
+    _showErrorSnackBar("login incorrecto", context);
     return null;
   }
 }
