@@ -359,6 +359,7 @@ Padding(
                     size: 35),
                 backgroundColor: Colors.transparent,
                 onPressed: () {
+                  // Action for 'like'.
                   setState(() {
                     gifList[index].liked = !gifList[index].liked;
                   });
