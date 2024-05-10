@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-
+ 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,11 +10,11 @@ import 'package:http/http.dart' as http;
 import '../Controllers/auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
 import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:http_parser/http_parser.dart';
-
+ 
 void main() {
   runApp(MyApp());
 }
-
+ 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -27,18 +27,18 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+ 
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
-
+ 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = Get.find<AuthController>();
   final userSingleton = UserSingleton();
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
-
+ 
   // Function to handle when the profile image is clicked
   void _onProfileImageClicked(BuildContext context) {
     showModalBottomSheet(
@@ -60,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     File imageFile =
                         File(pickedFile.path); // Convierte XFile a File aquí
                     changePhoto(
-                        imageFile); 
+                        imageFile);
                   }
                 },
               ),
@@ -70,11 +70,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   Navigator.pop(context); // Cierra la hoja inferior
                   // Solicita permiso para acceder a la galería
-
+ 
                   final ImagePicker picker = ImagePicker();
                   final XFile? pickedFile =
                       await picker.pickImage(source: ImageSource.gallery);
-
+ 
                   if (pickedFile != null) {
                     File imageFile =
                         File(pickedFile.path); // Convierte XFile a File aquí
@@ -103,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -204,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   OutlinedButton(
                     onPressed: () {
-                      // Acción cuando se presiona el botón "Configuración de la Cuenta"
+                      _authController.changeTab(5);
                     },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.white),
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
+ 
   Widget _buildStatColumn(String label, String count) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -266,12 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
+ 
   Future<void> deletePhoto() async {
     Uri apiUrl = Uri.parse(
         'http://217.182.70.161:6969/v1/api/users/delete_photo_profile');
     final token = UserSingleton().token;
-
+ 
     try {
       final response = await http.post(
         apiUrl,
@@ -280,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Content-Type': 'application/json',
         },
       );
-
+ 
       if (response.statusCode == 200) {
         // Clear profile photo data
         setState(() {
@@ -295,21 +295,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Handle error appropriately, like showing a snackbar or dialog
     }
   }
-
+ 
   Future<void> changePhoto(File photo) async {
     Uri apiUrl = Uri.parse(
         'http://217.182.70.161:6969/v1/api/users/change_photo_profile');
     final token = UserSingleton().token;
-
+ 
     try {
       var request = http.MultipartRequest('POST', apiUrl)
         ..headers['Authorization'] = 'Bearer $token'
         ..headers['Content-Type'] = 'multipart/form-data'
         ..files.add(await http.MultipartFile.fromPath('file', photo.path,
             contentType: MediaType('image', 'jpeg')));
-
+ 
       var response = await request.send();
-
+ 
       if (response.statusCode == 200) {
         print('Image uploaded successfully');
         setState(() {
