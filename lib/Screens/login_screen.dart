@@ -254,6 +254,7 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
 
     if (response.body.isNotEmpty) {
       final jsonResponse = jsonDecode(response.body);
+      UserSingleton().id = jsonResponse['_id'];
       UserSingleton().name = jsonResponse['full_name'];
       UserSingleton().username = jsonResponse['username'];
       UserSingleton().email = jsonResponse['email'];

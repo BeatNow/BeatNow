@@ -3,6 +3,7 @@ class Posts {
 
   late String _id;
   late String _username;
+  late String _userId;
   late String _description;
   late DateTime publicationDate;
   late int _likes;
@@ -26,10 +27,11 @@ class Posts {
     _saves = 0;
     _liked = false;
     _disliked = false;
+    _userId = '';
   }
 
   // Constructor para inicializar los valores
-  Posts.withDetails(String id, String username, String description, DateTime publicationDate, int likes, int dislikes, int saves, bool liked, bool disliked) {
+  Posts.withDetails(String id, String username, String description, DateTime publicationDate, int likes, int dislikes, int saves, bool liked, bool disliked, String userId) {
     _id = id;
     _username = username;
     _description = description;
@@ -39,10 +41,11 @@ class Posts {
     _saves = saves;
     _liked = liked;
     _disliked = disliked;
+    _userId = userId;
   }
 
   String get username => _username;
-  String get profileImageUrl => 'http://172.203.251.28/beatnow/$_username/posts/$_id/caratula.jpg';
+  String get profileImageUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/caratula.jpg';
   String get description => _description;
   DateTime get date => publicationDate;
   int get likes => _likes;
@@ -50,9 +53,15 @@ class Posts {
   int get saves => _saves;
   bool get liked => _liked;
   bool get disliked => _disliked;
+  String get id => _id;
+  String get userId => _userId;
 
   set username(String value) {
     _username = value;
+  }
+
+  set userId(String value) {
+    _userId = value;
   }
 
   set description(String value) {
@@ -78,6 +87,7 @@ class Posts {
   set disliked(bool value) {
     _disliked = value;
   }
+  
 
   static Posts fromJson(Map<String, dynamic> json) {
     return Posts.withDetails(
@@ -90,6 +100,7 @@ class Posts {
       json['saves'] as int,
       json['liked'] as bool,
       json['disliked'] as bool,
+      json['userId'] as String,
     );
   }
 }
