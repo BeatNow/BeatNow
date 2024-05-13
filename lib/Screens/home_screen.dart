@@ -6,7 +6,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
-import 'package:get/get_core/src/get_main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:BeatNow/Screens/LyricEditorPage.dart';
 
@@ -14,12 +13,48 @@ class HomeScreenState extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
-  int _selectedIndex = 1;
+
 class _HomeScreenState extends State<HomeScreenState> {
   final AuthController _authController = Get.find<AuthController>();
 
-
   List<Posts> _gifList = [];
+  int _selectedIndex = 1;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialPosts();
+  }
+
+  Future<void> _loadInitialPosts() async {
+    // Cargar los primeros tres posts
+    for (int i = 0; i < 3; i++) {
+      await _getNextPost();
+    }
+  }
+
+  Future<void> _getNextPost() async {
+    try {
+      final postInfo = await getPostInfo();
+      setState(() {
+        _gifList.add(Posts.withDetails(
+          postInfo['_id'].toString(),
+          postInfo['creator_username'].toString(),
+          postInfo['description'],
+          DateTime.now(),
+          0,
+          0,
+          0,
+          false,
+          false,
+          postInfo['user_id'].toString(),
+        ));
+      });
+    } catch (error) {
+      print('Error fetching next post: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,81 +266,45 @@ Padding(
   }
 
   Widget _buildCarousel(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: getPostInfo(), // Obtener el primer post al inicio
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          final postInfo = snapshot.data!;
-          _gifList.add(Posts.withDetails(
-            postInfo['_id'].toString(),
-            postInfo['creator_username'].toString(),
-            postInfo['description'],
-            DateTime.now(),
-            0,
-            0,
-            0,
-            false,
-            false,
-          ));
-
-          return CarouselSlider.builder(
-            options: CarouselOptions(
-              height: MediaQuery.of(context).size.height,
-              enlargeCenterPage: false,
-              autoPlay: false,
-              viewportFraction: 1.0,
-              scrollDirection: Axis.vertical,
-              onPageChanged: (index, _) {
-                // Cuando el usuario cambie de post, obtener el siguiente post
-                if (index >= _gifList.length - 1) {
-                  getNextPost();
-                }
-              },
+    return CarouselSlider.builder(
+      options: CarouselOptions(
+        height: MediaQuery.of(context).size.height,
+        enlargeCenterPage: false,
+        autoPlay: false,
+        viewportFraction: 1.0,
+        scrollDirection: Axis.vertical,
+        onPageChanged: (index, _) {
+          // Cuando el usuario cambie de post, obtener el siguiente post
+          setState(() {
+            _currentIndex = index;
+          });
+          if (index >= _gifList.length - 1) {
+            _loadMorePosts();
+          }
+        },
+      ),
+      itemCount: _gifList.length,
+      itemBuilder: (context, index, _) {
+        final item = _gifList[index];
+        return Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Image.network(
+              item.profileImageUrl,
+              fit: BoxFit.cover,
+              height: double.infinity,
             ),
-            itemCount: _gifList.length,
-            itemBuilder: (context, index, _) {
-              final item = _gifList[index];
-              return Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Image.network(
-                    item.profileImageUrl,
-                    fit: BoxFit.cover,
-                    height: double.infinity,
-                  ),
-                  _buildDynamicButtons(context, index, _gifList),
-                ],
-              );
-            },
-          );
-        }
+            _buildDynamicButtons(context, index, _gifList),
+          ],
+        );
       },
     );
   }
 
-  // Función para obtener el siguiente post de la API
-  void getNextPost() async {
-    try {
-      final postInfo = await getPostInfo();
-      setState(() {
-        _gifList.add(Posts.withDetails(
-          postInfo['_id'].toString(),
-          postInfo['creator_username'].toString(),
-          postInfo['description'],
-          DateTime.now(),
-          0,
-          0,
-          0,
-          false,
-          false,
-        ));
-      });
-    } catch (error) {
-      print('Error fetching next post: $error');
+  void _loadMorePosts() async {
+    // Cargar tres posts más al llegar al final del carrusel
+    for (int i = 0; i < 3; i++) {
+      await _getNextPost();
     }
   }
 
@@ -344,13 +343,18 @@ Padding(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               FloatingActionButton(
-                child: Icon(Icons.supervised_user_circle,
-                    color: Colors.white, size: 50),
                 backgroundColor: Colors.transparent,
                 onPressed: () {
-                  // Action for 'share'.
+                  // Action for 'like'.
+
                 },
                 elevation: 0,
+                child: CircleAvatar(
+                  radius: 20, // Ajusta el tamaño del avatar según sea necesario
+                  backgroundImage: NetworkImage(
+                    'http://172.203.251.28/beatnow/${gifList[index].userId}/photo_profile/photo_profile.png',
+                  ),
+                ),
               ),
               SizedBox(height: 25),
               FloatingActionButton(
@@ -390,7 +394,6 @@ Padding(
       ),
     );
   }
-  
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {
