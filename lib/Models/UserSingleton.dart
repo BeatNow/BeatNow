@@ -48,4 +48,6 @@ class UserSingleton {
   set token(String value) {
     _token = value;
   }
+
+  List<String> get user => [_id, _name, _username, _email, _profileImageUrl, _defaultProfileImageUrl, _token];
 }

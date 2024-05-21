@@ -1,12 +1,12 @@
-import 'package:BeatNow/Screens/AccountSettingsScreen.dart';
+import 'package:BeatNow/Screens/ProfileScreen/AccountSettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../Screens/forgot_password_screen.dart';
+import '../Screens/AuthScreen/forgot_password_screen.dart';
 import 'auth_controller.dart';
-import '../Screens/login_screen.dart';
-import '../Screens/signup_screen.dart';
-import '../Screens/profileuser_screen.dart';
-import '../Screens/home_screen.dart';// Import ProfileScreen
+import '../Screens/AuthScreen/login_screen.dart';
+import '../Screens/AuthScreen/signup_screen.dart';
+import '../Screens/ProfileScreen/profileuser_screen.dart';
+import '../Screens/HomeScreen/home_screen.dart';// Import ProfileScreen
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 

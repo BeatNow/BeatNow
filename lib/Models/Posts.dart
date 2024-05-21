@@ -10,7 +10,8 @@ class Posts {
   late int _dislikes;
   late int _saves;
   late bool _liked;
-  late bool _disliked;
+
+  late String _audioformat;
 
   factory Posts() {
     return _instance;
@@ -21,40 +22,40 @@ class Posts {
     _id = '';
     _username = '';
     _description = '';
-    publicationDate = DateTime.now();
     _likes = 0;
     _dislikes = 0;
     _saves = 0;
     _liked = false;
-    _disliked = false;
     _userId = '';
+    _audioformat = '';
   }
 
   // Constructor para inicializar los valores
-  Posts.withDetails(String id, String username, String description, DateTime publicationDate, int likes, int dislikes, int saves, bool liked, bool disliked, String userId) {
+  Posts.withDetails(String id, String username, String description, int likes, int dislikes, int saves, bool liked, String userId, String audioformat) {
     _id = id;
     _username = username;
     _description = description;
-    this.publicationDate = publicationDate;
     _likes = likes;
     _dislikes = dislikes;
     _saves = saves;
     _liked = liked;
-    _disliked = disliked;
     _userId = userId;
+    _audioformat = audioformat;
+
   }
 
   String get username => _username;
   String get profileImageUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/caratula.jpg';
+  String get audioUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.wav';
   String get description => _description;
   DateTime get date => publicationDate;
   int get likes => _likes;
   int get dislikes => _dislikes;
   int get saves => _saves;
   bool get liked => _liked;
-  bool get disliked => _disliked;
   String get id => _id;
   String get userId => _userId;
+  String get audioformat => _audioformat;
 
   set username(String value) {
     _username = value;
@@ -84,8 +85,9 @@ class Posts {
     _liked = value;
   }
 
-  set disliked(bool value) {
-    _disliked = value;
+
+  set audioformat(String value) {
+    _audioformat = value;
   }
   
 
@@ -94,13 +96,12 @@ class Posts {
       json['id'] as String,
       json['username'] as String,
       json['description'] as String,
-      DateTime.parse(json['publicationDate'] as String),
       json['likes'] as int,
       json['dislikes'] as int,
       json['saves'] as int,
       json['liked'] as bool,
-      json['disliked'] as bool,
       json['userId'] as String,
+      json['audioformat'] as String,
     );
   }
 }

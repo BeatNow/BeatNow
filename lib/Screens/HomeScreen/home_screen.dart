@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:BeatNow/Screens/LyricEditorPage.dart';
+import 'package:BeatNow/Screens/HomeScreen/LyricEditorPage.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class HomeScreenState extends StatefulWidget {
   @override
@@ -16,10 +17,11 @@ class HomeScreenState extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreenState> {
   final AuthController _authController = Get.find<AuthController>();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   List<Posts> _gifList = [];
   int _selectedIndex = 1;
-  int _currentIndex = 0;
+  int _currentIndex = 1;
 
   @override
   void initState() {
@@ -42,13 +44,12 @@ class _HomeScreenState extends State<HomeScreenState> {
           postInfo['_id'].toString(),
           postInfo['creator_username'].toString(),
           postInfo['description'],
-          DateTime.now(),
-          0,
-          0,
-          0,
-          false,
-          false,
+          postInfo['likes'],
+          postInfo['dislikes'],
+          postInfo['saves'],
+          postInfo['isLiked'],
           postInfo['user_id'].toString(),
+          postInfo['audio_format'].toString()
         ));
       });
     } catch (error) {
@@ -145,6 +146,7 @@ class _HomeScreenState extends State<HomeScreenState> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
+            AudioPlayer().stop();
           });
         },
         selectedFontSize: 0,
@@ -276,16 +278,20 @@ Padding(
         onPageChanged: (index, _) {
           // Cuando el usuario cambie de post, obtener el siguiente post
           setState(() {
+            
             _currentIndex = index;
+            _loadInitialPosts();
+
+            _playAudio(_gifList[index].audioUrl);
           });
-          if (index >= _gifList.length - 1) {
+          if (index >= _gifList.length - 3) {
             _loadMorePosts();
           }
         },
       ),
       itemCount: _gifList.length,
       itemBuilder: (context, index, _) {
-        final item = _gifList[index];
+        final item = _gifList [index];
         return Stack(
           alignment: Alignment.bottomRight,
           children: [
@@ -394,10 +400,20 @@ Padding(
       ),
     );
   }
+
+Future<void> _playAudio(String url) async {
+  try {
+    await _audioPlayer.stop();
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(UrlSource(url));
+  } catch (e) {
+    print('Error al reproducir el audio: $e');
+  }
+}
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {
-  final apiUrl = 'http://217.182.70.161:6969/v1/api/posts/random-publication';
+  final apiUrl = 'http://217.182.70.161:6969/v1/api/posts/random';
   final token = UserSingleton().token;
   final response = await http.get(
     Uri.parse(apiUrl),
@@ -413,3 +429,4 @@ Future<Map<String, dynamic>> getPostInfo() async {
     throw Exception('Failed to fetch post information');
   }
 }
+
