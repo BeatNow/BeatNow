@@ -10,7 +10,6 @@ class Posts {
   late int _dislikes;
   late int _saves;
   late bool _liked;
-
   late String _audioformat;
 
   factory Posts() {
@@ -41,12 +40,12 @@ class Posts {
     _liked = liked;
     _userId = userId;
     _audioformat = audioformat;
-
   }
 
   String get username => _username;
   String get profileImageUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/caratula.jpg';
-  String get audioUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.wav';
+  String get audioUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.$_audioformat';
+  //String get audioUrlmp3 => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.mp3';
   String get description => _description;
   DateTime get date => publicationDate;
   int get likes => _likes;
@@ -85,11 +84,9 @@ class Posts {
     _liked = value;
   }
 
-
   set audioformat(String value) {
     _audioformat = value;
   }
-  
 
   static Posts fromJson(Map<String, dynamic> json) {
     return Posts.withDetails(
@@ -101,7 +98,7 @@ class Posts {
       json['saves'] as int,
       json['liked'] as bool,
       json['userId'] as String,
-      json['audioformat'] as String,
+      json['audio_format'] as String,
     );
   }
 }

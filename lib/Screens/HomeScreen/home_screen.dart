@@ -1,6 +1,7 @@
 import 'package:BeatNow/Controllers/auth_controller.dart';
 import 'package:BeatNow/Models/Posts.dart';
 import 'package:BeatNow/Models/UserSingleton.dart';
+import 'package:BeatNow/Screens/HomeScreen/saved_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:get/get.dart';
@@ -41,16 +42,15 @@ class _HomeScreenState extends State<HomeScreenState> {
       final postInfo = await getPostInfo();
       setState(() {
         _gifList.add(Posts.withDetails(
-          postInfo['_id'].toString(),
-          postInfo['creator_username'].toString(),
-          postInfo['description'],
-          postInfo['likes'],
-          postInfo['dislikes'],
-          postInfo['saves'],
-          postInfo['isLiked'],
-          postInfo['user_id'].toString(),
-          postInfo['audio_format'].toString()
-        ));
+            postInfo['_id'].toString(),
+            postInfo['creator_username'].toString(),
+            postInfo['description'],
+            postInfo['likes'],
+            postInfo['dislikes'],
+            postInfo['saves'],
+            postInfo['isLiked'],
+            postInfo['user_id'].toString(),
+            postInfo['audio_format'].toString()));
       });
     } catch (error) {
       print('Error fetching next post: $error');
@@ -65,15 +65,22 @@ class _HomeScreenState extends State<HomeScreenState> {
       _buildLyricsPage(),
     ];
     return Scaffold(
-      appBar: _selectedIndex == 2
+      appBar: _selectedIndex == 2 || _selectedIndex == 0
           ? null
           : AppBar(
               // Removiendo el appbar en la página de letras
-              leading: IconButton(
-                icon: const Icon(Icons.person, color: Colors.white),
+              leading: FloatingActionButton(
+                backgroundColor: Colors.transparent,
                 onPressed: () {
                   _authController.changeTab(4);
                 },
+                elevation: 0,
+                child: CircleAvatar(
+                  radius: 18, // Ajusta el tamaño del avatar según sea necesario
+                  backgroundImage: NetworkImage(
+                    "${UserSingleton().profileImageUrl}",
+                  ),
+                ),
               ),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +111,9 @@ class _HomeScreenState extends State<HomeScreenState> {
               actions: <Widget>[
                 IconButton(
                   icon: const Icon(Icons.search, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: () {
+                    _authController.changeTab(6);
+                  },
                 ),
               ],
               backgroundColor: Color(0xFF111111),
@@ -157,12 +166,7 @@ class _HomeScreenState extends State<HomeScreenState> {
   }
 
   Widget _buildPage1() {
-    return Center(
-      child: Text(
-        'Página 1',
-        style: TextStyle(color: Colors.white),
-      ),
-    );
+    return SavedScreen();
   }
 
   Widget _buildLyricsPage() {
@@ -196,9 +200,8 @@ class _HomeScreenState extends State<HomeScreenState> {
                 itemCount: titles.length,
                 itemBuilder: (context, index) {
                   List<String> lines = lyrics[index].split('\n');
-                  String firstTwoLines = lines.length > 1
-                      ? lines.sublist(0, 2).join('\n')
-                      : lines[0];
+                  String firstTwoLines =
+                      lines.length > 1 ? lines[index] : lines[0];
                   return ListTile(
                     title: Text(titles[index]),
                     subtitle: Text(firstTwoLines),
@@ -228,39 +231,39 @@ class _HomeScreenState extends State<HomeScreenState> {
                 },
               ),
             ),
-Padding(
-  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 155),
-  child: ClipRRect(
-    borderRadius: BorderRadius.circular(100.0),
-    child: Container(
-      width: 100.0, // Ancho deseado para el fondo del botón
-      height: 60.0, // Alto deseado para el fondo del botón
-      color: Colors.black,
-      child: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  LyricEditorPage(title: "", lyric: "", index: null)),
-          ).then((_) {
-            setState(() {});
-          });
-        },
-        child: Icon(
-          Icons.add,
-          color: Color(0xFF8731E4),
-          size: 30, // Ajusta el tamaño del icono según sea necesario
-        ),
-        backgroundColor: Colors.transparent, // Fondo transparente para el botón flotante
-        elevation: 0, // Sin elevación para el botón flotante
-      ),
-    ),
-  ),
-),
-
-
-
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 155),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100.0),
+                child: Container(
+                  width: 100.0, // Ancho deseado para el fondo del botón
+                  height: 60.0, // Alto deseado para el fondo del botón
+                  color: Colors.black,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => LyricEditorPage(
+                                title: "", lyric: "", index: null)),
+                      ).then((_) {
+                        setState(() {});
+                      });
+                    },
+                    child: Icon(
+                      Icons.add,
+                      color: Color(0xFF8731E4),
+                      size:
+                          30, // Ajusta el tamaño del icono según sea necesario
+                    ),
+                    backgroundColor: Colors
+                        .transparent, // Fondo transparente para el botón flotante
+                    elevation: 0, // Sin elevación para el botón flotante
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -278,11 +281,13 @@ Padding(
         onPageChanged: (index, _) {
           // Cuando el usuario cambie de post, obtener el siguiente post
           setState(() {
-            
             _currentIndex = index;
             _loadInitialPosts();
-
-            _playAudio(_gifList[index].audioUrl);
+            if (_selectedIndex == 2 || _selectedIndex == 0) {
+              _audioPlayer.stop();
+            } else if (_selectedIndex == 1) {
+              _playAudio(_gifList[_currentIndex].audioUrl);
+            }
           });
           if (index >= _gifList.length - 3) {
             _loadMorePosts();
@@ -291,14 +296,19 @@ Padding(
       ),
       itemCount: _gifList.length,
       itemBuilder: (context, index, _) {
-        final item = _gifList [index];
+        final item = _gifList[index];
         return Stack(
           alignment: Alignment.bottomRight,
           children: [
-            Image.network(
-              item.profileImageUrl,
-              fit: BoxFit.cover,
-              height: double.infinity,
+            GestureDetector(
+              onTap: () {
+                _audioPlayer.pause();
+              },
+              child: Image.network(
+                item.profileImageUrl,
+                fit: BoxFit.cover,
+                height: double.infinity,
+              ),
             ),
             _buildDynamicButtons(context, index, _gifList),
           ],
@@ -315,101 +325,136 @@ Padding(
   }
 
   Widget _buildDynamicButtons(
-      BuildContext context, int index, List<Posts> gifList) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 35, right: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 10), // Añadir padding a la izquierda
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(gifList[index].username,
-                        style: TextStyle(color: Colors.white, fontSize: 20)),
-                    SizedBox(height: 10),
-                    Text(gifList[index].description,
-                        style: TextStyle(color: Colors.white, fontSize: 15)),
-                    SizedBox(height: 12),
-                  ],
+  BuildContext context, int index, List<Posts> gifList) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 35, right: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 10), // Añadir padding a la izquierda
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(gifList[index].username,
+                      style: TextStyle(color: Colors.white, fontSize: 20)),
+                  SizedBox(height: 10),
+                  Text(gifList[index].description,
+                      style: TextStyle(color: Colors.white, fontSize: 15)),
+                  SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(width: 10),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              backgroundColor: Colors.transparent,
+              onPressed: () {},
+              elevation: 0,
+              child: CircleAvatar(
+                radius: 20, // Ajusta el tamaño del avatar según sea necesario
+                backgroundImage: NetworkImage(
+                  'http://172.203.251.28/beatnow/${gifList[index].userId}/photo_profile/photo_profile.png',
                 ),
               ),
-            ],
-          ),
-          SizedBox(width: 10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'like'.
+            ),
+            SizedBox(height: 25),
+            FloatingActionButton(
+              child: Icon(
+                Icons.favorite,
+                color: _gifList[index].liked ? Colors.purple :  Colors.white ,
+                size: 35,
+              ),
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                _handleLikeButton(gifList[index].id); // Aquí se pasa el índice correcto
+              },
+              elevation: 0,
+            ),
+            SizedBox(height: 25),
+            FloatingActionButton(
+              child: Icon(Icons.shopping_cart, color: Colors.white, size: 35),
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                // Action for 'share'.
+              },
+              elevation: 0,
+            ),
+            SizedBox(height: 25),
+            FloatingActionButton(
+              child: Icon(Icons.ios_share, color: Colors.white, size: 35),
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                // Action for 'buy'.
+              },
+              elevation: 0,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
-                },
-                elevation: 0,
-                child: CircleAvatar(
-                  radius: 20, // Ajusta el tamaño del avatar según sea necesario
-                  backgroundImage: NetworkImage(
-                    'http://172.203.251.28/beatnow/${gifList[index].userId}/photo_profile/photo_profile.png',
-                  ),
-                ),
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(Icons.favorite,
-                    color: gifList[index].liked ? Colors.purple : Colors.white,
-                    size: 35),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'like'.
-                  setState(() {
-                    gifList[index].liked = !gifList[index].liked;
-                  });
-                },
-                elevation: 0,
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(Icons.shopping_cart, color: Colors.white, size: 35),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'share'.
-                },
-                elevation: 0,
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(Icons.ios_share, color: Colors.white, size: 35),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'buy'.
-                },
-                elevation: 0,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+
+  Future<void> _playAudio(String url) async {
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.play(UrlSource(url));
+    } catch (e) {
+      print('Error al reproducir el audio: $e');
+    }
   }
 
-Future<void> _playAudio(String url) async {
+  void _handleLikeButton(String postId) async {
   try {
-    await _audioPlayer.stop();
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(UrlSource(url));
-  } catch (e) {
-    print('Error al reproducir el audio: $e');
+    String apiUrl = '';
+    if (_gifList[_currentIndex].liked == true) {
+      // Si ya le dio "like", se eliminará el "like"
+      apiUrl =
+          'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
+    } else {
+      // Si aún no ha dado "like", se agregará el "like"
+      apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
+    }
+
+    final token = UserSingleton().token;
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        // Actualizar el estado de "me gusta" en la lista de publicaciones
+        final postIndex = _gifList.indexWhere((post) => post.id == postId);
+        if (postIndex != -1) {
+          _gifList[postIndex].liked = !_gifList[postIndex].liked;
+        }
+      });
+    } else {
+      throw Exception('Failed to update post like status');
+    }
+  } catch (error) {
+    print('Error al manejar el botón de like: $error');
+    // Manejar el error aquí
   }
 }
+
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {
@@ -429,4 +474,3 @@ Future<Map<String, dynamic>> getPostInfo() async {
     throw Exception('Failed to fetch post information');
   }
 }
-
