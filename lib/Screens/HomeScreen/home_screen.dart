@@ -373,7 +373,7 @@ class _HomeScreenState extends State<HomeScreenState> {
             FloatingActionButton(
               child: Icon(
                 Icons.favorite,
-                color: _gifList[index].liked ? Colors.purple :  Colors.white ,
+                color: _gifList[_currentIndex].liked ? Colors.purple :  Colors.white ,
                 size: 35,
               ),
               backgroundColor: Colors.transparent,
@@ -438,7 +438,7 @@ class _HomeScreenState extends State<HomeScreenState> {
       },
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 400) {
       setState(() {
         // Actualizar el estado de "me gusta" en la lista de publicaciones
         final postIndex = _gifList.indexWhere((post) => post.id == postId);
