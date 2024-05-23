@@ -325,7 +325,7 @@ Widget _buildCarousel(BuildContext context) {
                 
               },
               child: Image.network(
-                item.profileImageUrl,
+                item.coverImageUrl,
                 fit: BoxFit.cover,
                 height: double.infinity,
               ),

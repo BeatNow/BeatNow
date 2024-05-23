@@ -1,3 +1,4 @@
+import 'package:BeatNow/Models/SavedPost.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BeatNow/Models/UserSingleton.dart';
@@ -61,7 +62,8 @@ class _SavedScreen extends State<SavedScreen> {
                   return Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(snapshot.data![index]['coverImageUrl']),
+                        image:
+                            NetworkImage(snapshot.data![index].coverImageUrl),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -80,7 +82,7 @@ class _SavedScreen extends State<SavedScreen> {
     );
   }
 
-  Future<List<dynamic>> getSavedPosts() async {
+  Future<List<SavedPost>> getSavedPosts() async {
     final apiUrl = 'http://217.182.70.161:6969/v1/api/users/saved-posts';
     final token = UserSingleton().token;
     final response = await http.get(
@@ -92,7 +94,13 @@ class _SavedScreen extends State<SavedScreen> {
 
     if (response.statusCode == 200) {
       final jsonResponse = convert.jsonDecode(response.body);
-      return jsonResponse;
+      if (jsonResponse['saved_posts'] is List) {
+        return jsonResponse['saved_posts']
+            .map((item) => SavedPost.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Saved posts is not a list');
+      }
     } else {
       throw Exception('Failed to fetch post information');
     }
