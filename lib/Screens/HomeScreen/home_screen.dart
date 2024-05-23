@@ -24,8 +24,8 @@ class _HomeScreenState extends State<HomeScreenState> {
 
   List<Posts> _gifList = [];
   int _selectedIndex = 1;
-  int _currentIndex = 1;
-
+  int _currentIndex = 0;
+  bool _isPlaying = false;
   @override
   void initState() {
     super.initState();
@@ -42,9 +42,10 @@ class _HomeScreenState extends State<HomeScreenState> {
 
   Future<void> _loadInitialPosts() async {
     // Cargar los primeros tres posts
-    for (int i = 0; i < 3; i++) {
-      await _getNextPost();
-    }
+    await _getNextPost();
+    //Hacer condicional que si no encuentra posts que no haga nada
+    
+
   }
 
   Future<void> _getNextPost() async {
@@ -57,7 +58,6 @@ class _HomeScreenState extends State<HomeScreenState> {
             postInfo['creator_username'].toString(),
             postInfo['description'],
             postInfo['likes'],
-            postInfo['dislikes'],
             postInfo['saves'],
             postInfo['isLiked'],
             postInfo['isSaved'],
@@ -76,11 +76,11 @@ class _HomeScreenState extends State<HomeScreenState> {
       _buildCarousel(context),
       _buildLyricsPage(),
     ];
+
     return Scaffold(
       appBar: _selectedIndex == 2 || _selectedIndex == 0
           ? null
           : AppBar(
-              // Removiendo el appbar en la página de letras
               leading: FloatingActionButton(
                 backgroundColor: Colors.transparent,
                 onPressed: () {
@@ -88,33 +88,33 @@ class _HomeScreenState extends State<HomeScreenState> {
                 },
                 elevation: 0,
                 child: CircleAvatar(
-                  radius: 18, // Ajusta el tamaño del avatar según sea necesario
-                  backgroundImage: NetworkImage(
-                    "${UserSingleton().profileImageUrl}",
-                  ),
+                  radius: 18,
+                  backgroundImage:
+                      NetworkImage("${UserSingleton().profileImageUrl}"),
                 ),
               ),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   TextButton(
-                    onPressed: () {
-                      OtherUserSingleton().username =
-                          _gifList[_currentIndex].username;
-                      OtherUserSingleton().id = _gifList[_currentIndex].userId;
-                      OtherUserSingleton().name = _gifList[_currentIndex].username;
-                      
-                      _authController.changeTab(8);
-                    },
-                    child: Text(
-                      "@" + _gifList[_currentIndex].username,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                      onPressed: () {
+                        OtherUserSingleton().username =
+                            _gifList[_currentIndex].username;
+                        OtherUserSingleton().id =
+                            _gifList[_currentIndex].userId;
+                        OtherUserSingleton().name =
+                            _gifList[_currentIndex].username;
+                        _authController.changeTab(8);
+                      },
+                      child: _gifList.isNotEmpty
+                          ? Text(
+                              "@" + _gifList[_currentIndex].username,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                              ),
+                            )
+                          : Text("")),
                   const VerticalDivider(color: Colors.white),
                 ],
               ),
@@ -193,16 +193,12 @@ class _HomeScreenState extends State<HomeScreenState> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 50.0), // Incrementando el espacio vertical
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 50.0),
               child: Text(
                 'Your Lyrics',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight:
-                        FontWeight.bold), // Aumentando el tamaño del texto
-                textAlign: TextAlign.center, // Centrando el texto
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
             ),
             Expanded(
@@ -210,8 +206,9 @@ class _HomeScreenState extends State<HomeScreenState> {
                 itemCount: titles.length,
                 itemBuilder: (context, index) {
                   List<String> lines = lyrics[index].split('\n');
-                  String firstTwoLines =
-                      lines.length > 1 ? lines[index] : lines[0];
+                  String firstTwoLines = lines.length > 1
+                      ? lines.sublist(0, 2).join('\n')
+                      : lines[0];
                   return ListTile(
                     title: Text(titles[index]),
                     subtitle: Text(firstTwoLines),
@@ -247,8 +244,8 @@ class _HomeScreenState extends State<HomeScreenState> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(100.0),
                 child: Container(
-                  width: 100.0, // Ancho deseado para el fondo del botón
-                  height: 60.0, // Alto deseado para el fondo del botón
+                  width: 100.0,
+                  height: 60.0,
                   color: Colors.black,
                   child: FloatingActionButton(
                     onPressed: () {
@@ -264,12 +261,10 @@ class _HomeScreenState extends State<HomeScreenState> {
                     child: Icon(
                       Icons.add,
                       color: Color(0xFF8731E4),
-                      size:
-                          30, // Ajusta el tamaño del icono según sea necesario
+                      size: 30,
                     ),
-                    backgroundColor: Colors
-                        .transparent, // Fondo transparente para el botón flotante
-                    elevation: 0, // Sin elevación para el botón flotante
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
                   ),
                 ),
               ),
@@ -279,48 +274,55 @@ class _HomeScreenState extends State<HomeScreenState> {
       },
     );
   }
-  void _startDelay() async {
-    await Future.delayed(Duration(seconds: 1));
 
-  }
-  Widget _buildCarousel(BuildContext context) {
-    return CarouselSlider.builder(
-      options: CarouselOptions(
-        height: MediaQuery.of(context).size.height,
-        enlargeCenterPage: false,
-        autoPlay: false,
-        viewportFraction: 1.0,
-        scrollDirection: Axis.vertical,
-        onPageChanged: (index, _) {
-          // Cuando el usuario cambie de post, 
-          
-        _startDelay();
-          //obtener el siguiente post
-          setState(() {
-            
-            _currentIndex = index;
-            UserSingleton().current= _currentIndex ;
-            _loadInitialPosts();
-            if (_selectedIndex == 2 || _selectedIndex == 0) {
-              _audioPlayer.stop();
-            } else if (_selectedIndex == 1) {
+
+
+Widget _buildCarousel(BuildContext context) {
+  // Reproducir la música al inicio del widget
+  return CarouselSlider.builder(
+    options: CarouselOptions(
+      height: MediaQuery.of(context).size.height,
+      enlargeCenterPage: false,
+      autoPlay: false,
+      viewportFraction: 1.0,
+      scrollDirection: Axis.vertical,
+      onPageChanged: (index, _) {
+        _loadMorePosts();
+
+        setState(() {
+          _currentIndex = index;
+          UserSingleton().current = _currentIndex;
+          _loadInitialPosts();
+          if (_selectedIndex == 2 || _selectedIndex == 0) {
+            _audioPlayer.stop();
+          } else if (_selectedIndex == 1) {
+            if (_gifList.length > _currentIndex) {
               _playAudio(_gifList[_currentIndex].audioUrl);
             }
-          });
-          if (index >= _gifList.length - 3) {
-            _loadMorePosts();
           }
-        },
-      ),
-      itemCount: _gifList.length,
-      itemBuilder: (context, index, _) {
+        });
+        if (index >= _gifList.length - 3) {
+          _loadMorePosts();
+        }
+      },
+    ),
+    itemCount: _gifList.length,
+    itemBuilder: (context, index, _) {
+      if (_gifList.length > index) {
         final item = _gifList[index];
         return Stack(
           alignment: Alignment.bottomRight,
           children: [
             GestureDetector(
               onTap: () {
-                _audioPlayer.pause();
+                if (_isPlaying) {
+                  _audioPlayer.pause();
+                  _isPlaying = false;
+                } else {
+                  _isPlaying = true;
+                  _audioPlayer.resume();
+                }
+                
               },
               child: Image.network(
                 item.profileImageUrl,
@@ -331,9 +333,13 @@ class _HomeScreenState extends State<HomeScreenState> {
             _buildDynamicButtons(context, index),
           ],
         );
-      },
-    );
-  }
+      } else {
+        return Container(); // O cualquier otro Widget de carga o de relleno
+      }
+    },
+  );
+}
+
 
   void _loadMorePosts() async {
     // Cargar tres posts más al llegar al final del carrusel
@@ -342,131 +348,137 @@ class _HomeScreenState extends State<HomeScreenState> {
     }
   }
 
- Widget _buildDynamicButtons(BuildContext context, int index) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 35, right: 10),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 10), // Añadir padding a la izquierda
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildDynamicButtons(BuildContext context, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 35, right: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    left: 10), // Añadir padding a la izquierda
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_gifList[index].title,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold)),
+                    SizedBox(height: 10),
+                    Text(_gifList[index].description,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold)),
+                    SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(width: 10),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  OtherUserSingleton().username =
+                      _gifList[_currentIndex].username;
+                  OtherUserSingleton().id = _gifList[_currentIndex].userId;
+                  OtherUserSingleton().name = _gifList[_currentIndex].username;
+
+                  _authController.changeTab(8);
+                },
+                elevation: 0,
+                child: CircleAvatar(
+                  radius: 20, // Ajusta el tamaño del avatar según sea necesario
+                  backgroundImage: NetworkImage(
+                    'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+                  ),
+                ),
+              ),
+              SizedBox(height: 25),
+              Column(
                 children: [
-                  Text(_gifList[index].title,
-                      style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 10),
-                  Text(_gifList[index].description,
-                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 12),
+                  FloatingActionButton(
+                    child: Icon(
+                      Icons.favorite,
+                      color:
+                          _gifList[index].liked ? Colors.purple : Colors.white,
+                      size: 35,
+                    ),
+                    backgroundColor: Colors.transparent,
+                    onPressed: () {
+                      setState(() {
+                        // Cambiar el estado de "liked"
+                        _handleLikeButton(_gifList[index].id);
+                        for (int i = 0; i < _gifList.length; i++) {
+                          if (_gifList[i].id == _gifList[index].id) {
+                            _gifList[i].liked = !_gifList[i].liked;
+                          }
+                        }
+                      });
+                      // Llamar a la función para manejar la lógica de like/unlike
+                    },
+                    elevation: 0,
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    // Convertir int a String
+                    _gifList[index].likes.toString(), // Convertir int a String
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-        SizedBox(width: 10),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                OtherUserSingleton().username =
-                        _gifList[_currentIndex].username;
-                    OtherUserSingleton().id = _gifList[_currentIndex].userId;
-                    OtherUserSingleton().name = _gifList[_currentIndex].username;
-                    
-                    _authController.changeTab(8);
-              },
-              elevation: 0,
-              child: CircleAvatar(
-                radius: 20, // Ajusta el tamaño del avatar según sea necesario
-                backgroundImage: NetworkImage(
-                  'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+              SizedBox(height: 15),
+              FloatingActionButton(
+                child: Icon(
+                  Icons.bookmark,
+                  color: _gifList[index].saved
+                      ? Color.fromARGB(255, 252, 212, 81)
+                      : Colors.white,
+                  size: 35,
                 ),
-              ),
-            ),
-            SizedBox(height: 25),
-            Column(
-              children: [
-                FloatingActionButton(
-                  child: Icon(
-                    Icons.favorite,
-                    color: _gifList[index].liked ? Colors.purple : Colors.white,
-                    size: 35,
-                  ),
-                  backgroundColor: Colors.transparent,
-                  onPressed: () {
-                    setState(() {
-                      // Cambiar el estado de "liked"
-                      _handleLikeButton(_gifList[index].id);
-                      for (int i = 0; i < _gifList.length; i++) {
-                        if (_gifList[i].id == _gifList[index].id) {
-                          _gifList[i].liked = !_gifList[i].liked;
-                          
-                        }
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  setState(() {
+                    _handleSaveButton(_gifList[index].id);
+                    for (int i = 0; i < _gifList.length; i++) {
+                      if (_gifList[i].id == _gifList[index].id) {
+                        _gifList[i].saved = !_gifList[i].saved;
                       }
-                      
-                    });
-                    // Llamar a la función para manejar la lógica de like/unlike
-                  },
-                  elevation: 0,
-                ),
-                SizedBox(height: 5),
-                Text(
-                  // Convertir int a String
-                  _gifList[index].likes.toString(), // Convertir int a String
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ],
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(
-                Icons.bookmark,
-                color: _gifList[index].saved
-                    ? Color.fromARGB(255, 252, 212, 81)
-                    : Colors.white,
-                size: 35,
-              ),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                setState(() {
-                  _handleSaveButton(_gifList[index].id);
-                  for (int i = 0; i < _gifList.length; i++) {
-                    if (_gifList[i].id == _gifList[index].id) {
-                      _gifList[i].saved = !_gifList[i].saved;
                     }
-                  }
-                });
-                // Llamar a la función para manejar la lógica de like/unlike
-              },
-              elevation: 0,
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(Icons.ios_share, color: Colors.white, size: 35),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                // Acción para 'share'.
-              },
-              elevation: 0,
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-
+                  });
+                  // Llamar a la función para manejar la lógica de like/unlike
+                },
+                elevation: 0,
+              ),
+              SizedBox(height: 25),
+              FloatingActionButton(
+                child: Icon(Icons.ios_share, color: Colors.white, size: 35),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  // Acción para 'share'.
+                },
+                elevation: 0,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _playAudio(String url) async {
     try {
@@ -485,10 +497,10 @@ class _HomeScreenState extends State<HomeScreenState> {
         // Si ya le dio "like", se eliminará el "like"
         apiUrl =
             'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
-            if (_gifList[_currentIndex].likes < 0){
-              _gifList[_currentIndex].likes = 0;
-            } 
-            _gifList[_currentIndex].likes = _gifList[_currentIndex].likes - 1;
+        if (_gifList[_currentIndex].likes < 0) {
+          _gifList[_currentIndex].likes = 0;
+        }
+        _gifList[_currentIndex].likes = _gifList[_currentIndex].likes - 1;
       } else {
         // Si aún no ha dado "like", se agregará el "like"
         apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
@@ -519,7 +531,6 @@ class _HomeScreenState extends State<HomeScreenState> {
       if (_gifList[_currentIndex].saved == true) {
         apiUrl =
             'http://217.182.70.161:6969/v1/api/interactions/unsave/$postId';
-          
       } else {
         apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/save/$postId';
       }
@@ -544,7 +555,7 @@ class _HomeScreenState extends State<HomeScreenState> {
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {
-  final apiUrl = 'http://217.182.70.161:6969/v1/api/posts/random';
+  const apiUrl = 'http://217.182.70.161:6969/v1/api/posts/random';
   final token = UserSingleton().token;
   final response = await http.get(
     Uri.parse(apiUrl),

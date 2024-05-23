@@ -8,7 +8,7 @@ class Posts {
   late String _description;
   late DateTime publicationDate;
   late int _likes;
-  late int _dislikes;
+
   late int _saves;
   late bool _liked;
   late bool _saved;
@@ -25,7 +25,7 @@ class Posts {
     _username = '';
     _description = '';
     _likes = 0;
-    _dislikes = 0;
+
     _saves = 0;
     _liked = false;
     _saved = false;
@@ -34,13 +34,12 @@ class Posts {
   }
 
   // Constructor para inicializar los valores
-  Posts.withDetails(String id, String title, String username, String description, int likes, int dislikes, int saves, bool liked, bool saved, String userId, String audioformat) {
+  Posts.withDetails(String id, String title, String username, String description, int likes, int saves, bool liked, bool saved, String userId, String audioformat) {
     _id = id;
     _title = title;
     _username = username;
     _description = description;
     _likes = likes;
-    _dislikes = dislikes;
     _saves = saves;
     _liked = liked;
     _saved = saved;
@@ -56,7 +55,6 @@ class Posts {
   String get description => _description;
   DateTime get date => publicationDate;
   int get likes => _likes;
-  int get dislikes => _dislikes;
   int get saves => _saves;
   bool get liked => _liked;
   bool get saved => _saved;
@@ -84,9 +82,6 @@ class Posts {
     _likes = value;
   }
 
-  set dislikes(int value) {
-    _dislikes = value;
-  }
 
   set saves(int value) {
     _saves = value;
@@ -111,7 +106,6 @@ class Posts {
       json['username'] as String,
       json['description'] as String,
       json['likes'] as int,
-      json['dislikes'] as int,
       json['saves'] as int,
       json['liked'] as bool,
       json['saved'] as bool,
