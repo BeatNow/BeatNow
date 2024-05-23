@@ -25,6 +25,8 @@ dependencies:
   shared_preferences: ^2.2.3
   speech_to_text: ^6.6.1
   cached_network_image: ^3.0.0
+  flutter_soloud: ^2.0.1
+  google_fonts: ^4.0.3
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,5 @@
-class UserSingleton {
-  static final UserSingleton _instance = UserSingleton._internal();
+class OtherUserSingleton {
+  static final OtherUserSingleton _instance = OtherUserSingleton._internal();
   late String _id = '';
   late String _name = '';
   late String _username = '';
@@ -9,11 +9,11 @@ class UserSingleton {
   late String _token = '';
   late int _current= 0;
 
-  factory UserSingleton() {
+  factory OtherUserSingleton() {
     return _instance;
   }
 
-  UserSingleton._internal();
+  OtherUserSingleton._internal();
 
   String get name => _name;
   String get username => _username;

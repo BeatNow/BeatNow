@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import '../Controllers/auth_controller.dart';
+import '../../Controllers/auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -254,7 +254,7 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
 
     if (response.body.isNotEmpty) {
       final jsonResponse = jsonDecode(response.body);
-      UserSingleton().id = jsonResponse['_id'];
+      UserSingleton().id = jsonResponse['id'];
       UserSingleton().name = jsonResponse['full_name'];
       UserSingleton().username = jsonResponse['username'];
       UserSingleton().email = jsonResponse['email'];

@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 
-import '../Controllers/auth_controller.dart';
+import '../../Controllers/auth_controller.dart';
 
 
 void main() => runApp(MyApp());
