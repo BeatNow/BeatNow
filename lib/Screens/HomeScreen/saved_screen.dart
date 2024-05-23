@@ -11,7 +11,7 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreen extends State<SavedScreen> {
-  late Future<List<dynamic>> _savedPosts;
+  late Future<List<SavedPost>> _savedPosts;
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _SavedScreen extends State<SavedScreen> {
             stops: [0.5, 1.0], // dónde comenzar y terminar cada color
           ),
         ),
-        child: FutureBuilder<List<dynamic>>(
+        child: FutureBuilder<List<SavedPost>>(
           future: _savedPosts,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -62,8 +62,7 @@ class _SavedScreen extends State<SavedScreen> {
                   return Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image:
-                            NetworkImage(snapshot.data![index].coverImageUrl),
+                        image: NetworkImage('http://172.203.251.28/beatnow/${snapshot.data![index].userId}/posts/${snapshot.data![index].postId}/caratula.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -96,7 +95,7 @@ class _SavedScreen extends State<SavedScreen> {
       final jsonResponse = convert.jsonDecode(response.body);
       if (jsonResponse['saved_posts'] is List) {
         return jsonResponse['saved_posts']
-            .map((item) => SavedPost.fromJson(item))
+            .map<SavedPost>((item) => SavedPost.fromJson(item))
             .toList();
       } else {
         throw Exception('Saved posts is not a list');
