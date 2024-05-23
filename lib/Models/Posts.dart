@@ -25,7 +25,6 @@ class Posts {
     _username = '';
     _description = '';
     _likes = 0;
-
     _saves = 0;
     _liked = false;
     _saved = false;
