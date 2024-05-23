@@ -30,6 +30,14 @@ class _HomeScreenState extends State<HomeScreenState> {
     _loadInitialPosts();
   }
 
+  @override
+  void dispose() {
+    // Detener el reproductor de audio cuando el widget se elimine
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadInitialPosts() async {
     // Cargar los primeros tres posts
     for (int i = 0; i < 3; i++) {
@@ -155,7 +163,7 @@ class _HomeScreenState extends State<HomeScreenState> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
-            AudioPlayer().stop();
+            _audioPlayer.stop();
           });
         },
         selectedFontSize: 0,
@@ -310,7 +318,7 @@ class _HomeScreenState extends State<HomeScreenState> {
                 height: double.infinity,
               ),
             ),
-            _buildDynamicButtons(context, index, _gifList),
+            _buildDynamicButtons(context, index),
           ],
         );
       },
@@ -324,89 +332,99 @@ class _HomeScreenState extends State<HomeScreenState> {
     }
   }
 
-  Widget _buildDynamicButtons(
-  BuildContext context, int index, List<Posts> gifList) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 35, right: 10),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 10), // Añadir padding a la izquierda
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(gifList[index].username,
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
-                  SizedBox(height: 10),
-                  Text(gifList[index].description,
-                      style: TextStyle(color: Colors.white, fontSize: 15)),
-                  SizedBox(height: 12),
-                ],
-              ),
-            ),
-          ],
-        ),
-        SizedBox(width: 10),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              backgroundColor: Colors.transparent,
-              onPressed: () {},
-              elevation: 0,
-              child: CircleAvatar(
-                radius: 20, // Ajusta el tamaño del avatar según sea necesario
-                backgroundImage: NetworkImage(
-                  'http://172.203.251.28/beatnow/${gifList[index].userId}/photo_profile/photo_profile.png',
+  Widget _buildDynamicButtons(BuildContext context, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 35, right: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    left: 10), // Añadir padding a la izquierda
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_gifList[index].username,
+                        style: TextStyle(color: Colors.white, fontSize: 20)),
+                    SizedBox(height: 10),
+                    Text(_gifList[index].description,
+                        style: TextStyle(color: Colors.white, fontSize: 15)),
+                    SizedBox(height: 12),
+                  ],
                 ),
               ),
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(
-                Icons.favorite,
-                color: _gifList[_currentIndex].liked ? Colors.purple :  Colors.white ,
-                size: 35,
+            ],
+          ),
+          SizedBox(width: 10),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                onPressed: () {},
+                elevation: 0,
+                child: CircleAvatar(
+                  radius: 20, // Ajusta el tamaño del avatar según sea necesario
+                  backgroundImage: NetworkImage(
+                    'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+                  ),
+                ),
               ),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                _handleLikeButton(gifList[index].id); // Aquí se pasa el índice correcto
-              },
-              elevation: 0,
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(Icons.shopping_cart, color: Colors.white, size: 35),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                // Action for 'share'.
-              },
-              elevation: 0,
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(Icons.ios_share, color: Colors.white, size: 35),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                // Action for 'buy'.
-              },
-              elevation: 0,
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+              SizedBox(height: 25),
+              FloatingActionButton(
+                child: Icon(
+                  Icons.favorite,
+                  color: _gifList[index].liked ? Colors.purple : Colors.white,
+                  size: 35,
+                ),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  setState(() {
+                    // Cambiar el estado de "liked"
+                    _handleLikeButton(_gifList[index].id);
+                    //_gifList[index].liked = !_gifList[index].liked;
+                    for (int i = 0; i < _gifList.length; i++){
+                      if (_gifList[i].id == _gifList[index].id){
+                        _gifList[i].liked = !_gifList[i].liked;
+                      }
 
+                    }
+              
+                  });
+                  // Llamar a la función para manejar la lógica de like/unlike
+                },
+                elevation: 0,
+              ),
+              SizedBox(height: 25),
+              FloatingActionButton(
+                child: Icon(Icons.shopping_cart, color: Colors.white, size: 35),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  // Action for 'share'.
+                },
+                elevation: 0,
+              ),
+              SizedBox(height: 25),
+              FloatingActionButton(
+                child: Icon(Icons.ios_share, color: Colors.white, size: 35),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  // Action for 'buy'.
+                },
+                elevation: 0,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _playAudio(String url) async {
     try {
@@ -419,42 +437,34 @@ class _HomeScreenState extends State<HomeScreenState> {
   }
 
   void _handleLikeButton(String postId) async {
-  try {
-    String apiUrl = '';
-    if (_gifList[_currentIndex].liked == true) {
-      // Si ya le dio "like", se eliminará el "like"
-      apiUrl =
-          'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
-    } else {
-      // Si aún no ha dado "like", se agregará el "like"
-      apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
-    }
+    try {
+      String apiUrl = '';
+      if (_gifList[_currentIndex].liked == true) {
+        // Si ya le dio "like", se eliminará el "like"
+        apiUrl =
+            'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
+      } else {
+        // Si aún no ha dado "like", se agregará el "like"
+        apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
+      }
 
-    final token = UserSingleton().token;
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final token = UserSingleton().token;
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 400) {
-      setState(() {
-        // Actualizar el estado de "me gusta" en la lista de publicaciones
-        final postIndex = _gifList.indexWhere((post) => post.id == postId);
-        if (postIndex != -1) {
-          _gifList[postIndex].liked = !_gifList[postIndex].liked;
-        }
-      });
-    } else {
-      throw Exception('Failed to update post like status');
+      if (response.statusCode == 200 || response.statusCode == 400) {
+      } else {
+        throw Exception('Failed to update post like status');
+      }
+    } catch (error) {
+      print('Error al manejar el botón de like: $error');
+      // Manejar el error aquí
     }
-  } catch (error) {
-    print('Error al manejar el botón de like: $error');
-    // Manejar el error aquí
   }
-}
-
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {
