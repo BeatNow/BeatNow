@@ -1,5 +1,6 @@
 import 'package:BeatNow/Screens/HomeScreen/saved_screen.dart';
 import 'package:BeatNow/Screens/ProfileScreen/AccountSettingsScreen.dart';
+import 'package:BeatNow/Screens/ProfileScreen/profileother_screen.dart';
 import 'package:BeatNow/Screens/SearchScreens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -63,6 +64,8 @@ class HomeScreen extends StatelessWidget {
           return SearchScreen();
         case 7:
           return SavedScreen();
+        case 8:
+          return ProfileOtherScreen();
         default:
           return LoginScreen();
       }

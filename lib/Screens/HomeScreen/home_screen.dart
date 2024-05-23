@@ -1,7 +1,9 @@
 import 'package:BeatNow/Controllers/auth_controller.dart';
+import 'package:BeatNow/Models/OtherUserSingleton.dart';
 import 'package:BeatNow/Models/Posts.dart';
 import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:BeatNow/Screens/HomeScreen/saved_screen.dart';
+import 'package:BeatNow/Screens/ProfileScreen/profileuser_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:get/get.dart';
@@ -51,12 +53,14 @@ class _HomeScreenState extends State<HomeScreenState> {
       setState(() {
         _gifList.add(Posts.withDetails(
             postInfo['_id'].toString(),
+            postInfo['title'],
             postInfo['creator_username'].toString(),
             postInfo['description'],
             postInfo['likes'],
             postInfo['dislikes'],
             postInfo['saves'],
             postInfo['isLiked'],
+            postInfo['isSaved'],
             postInfo['user_id'].toString(),
             postInfo['audio_format'].toString()));
       });
@@ -94,26 +98,24 @@ class _HomeScreenState extends State<HomeScreenState> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18.0),
+                    onPressed: () {
+                      OtherUserSingleton().username =
+                          _gifList[_currentIndex].username;
+                      OtherUserSingleton().id = _gifList[_currentIndex].userId;
+                      OtherUserSingleton().name = _gifList[_currentIndex].username;
+                      
+                      _authController.changeTab(8);
+                    },
+                    child: Text(
+                      "@" + _gifList[_currentIndex].username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text('Following',
-                        style: TextStyle(color: Colors.white)),
-                    onPressed: () {},
                   ),
                   const VerticalDivider(color: Colors.white),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18.0),
-                      ),
-                    ),
-                    child: const Text('For You',
-                        style: TextStyle(color: Colors.white)),
-                    onPressed: () {},
-                  ),
                 ],
               ),
               actions: <Widget>[
@@ -277,7 +279,10 @@ class _HomeScreenState extends State<HomeScreenState> {
       },
     );
   }
+  void _startDelay() async {
+    await Future.delayed(Duration(seconds: 1));
 
+  }
   Widget _buildCarousel(BuildContext context) {
     return CarouselSlider.builder(
       options: CarouselOptions(
@@ -287,9 +292,14 @@ class _HomeScreenState extends State<HomeScreenState> {
         viewportFraction: 1.0,
         scrollDirection: Axis.vertical,
         onPageChanged: (index, _) {
-          // Cuando el usuario cambie de post, obtener el siguiente post
+          // Cuando el usuario cambie de post, 
+          
+        _startDelay();
+          //obtener el siguiente post
           setState(() {
+            
             _currentIndex = index;
+            UserSingleton().current= _currentIndex ;
             _loadInitialPosts();
             if (_selectedIndex == 2 || _selectedIndex == 0) {
               _audioPlayer.stop();
@@ -332,99 +342,131 @@ class _HomeScreenState extends State<HomeScreenState> {
     }
   }
 
-  Widget _buildDynamicButtons(BuildContext context, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 35, right: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 10), // Añadir padding a la izquierda
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_gifList[index].username,
-                        style: TextStyle(color: Colors.white, fontSize: 20)),
-                    SizedBox(height: 10),
-                    Text(_gifList[index].description,
-                        style: TextStyle(color: Colors.white, fontSize: 15)),
-                    SizedBox(height: 12),
-                  ],
+ Widget _buildDynamicButtons(BuildContext context, int index) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 35, right: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 10), // Añadir padding a la izquierda
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_gifList[index].title,
+                      style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Text(_gifList[index].description,
+                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(width: 10),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                OtherUserSingleton().username =
+                        _gifList[_currentIndex].username;
+                    OtherUserSingleton().id = _gifList[_currentIndex].userId;
+                    OtherUserSingleton().name = _gifList[_currentIndex].username;
+                    
+                    _authController.changeTab(8);
+              },
+              elevation: 0,
+              child: CircleAvatar(
+                radius: 20, // Ajusta el tamaño del avatar según sea necesario
+                backgroundImage: NetworkImage(
+                  'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
                 ),
               ),
-            ],
-          ),
-          SizedBox(width: 10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                onPressed: () {},
-                elevation: 0,
-                child: CircleAvatar(
-                  radius: 20, // Ajusta el tamaño del avatar según sea necesario
-                  backgroundImage: NetworkImage(
-                    'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+            ),
+            SizedBox(height: 25),
+            Column(
+              children: [
+                FloatingActionButton(
+                  child: Icon(
+                    Icons.favorite,
+                    color: _gifList[index].liked ? Colors.purple : Colors.white,
+                    size: 35,
                   ),
-                ),
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(
-                  Icons.favorite,
-                  color: _gifList[index].liked ? Colors.purple : Colors.white,
-                  size: 35,
-                ),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  setState(() {
-                    // Cambiar el estado de "liked"
-                    _handleLikeButton(_gifList[index].id);
-                    //_gifList[index].liked = !_gifList[index].liked;
-                    for (int i = 0; i < _gifList.length; i++){
-                      if (_gifList[i].id == _gifList[index].id){
-                        _gifList[i].liked = !_gifList[i].liked;
+                  backgroundColor: Colors.transparent,
+                  onPressed: () {
+                    setState(() {
+                      // Cambiar el estado de "liked"
+                      _handleLikeButton(_gifList[index].id);
+                      for (int i = 0; i < _gifList.length; i++) {
+                        if (_gifList[i].id == _gifList[index].id) {
+                          _gifList[i].liked = !_gifList[i].liked;
+                          
+                        }
                       }
-
+                      
+                    });
+                    // Llamar a la función para manejar la lógica de like/unlike
+                  },
+                  elevation: 0,
+                ),
+                SizedBox(height: 5),
+                Text(
+                  // Convertir int a String
+                  _gifList[index].likes.toString(), // Convertir int a String
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+            SizedBox(height: 25),
+            FloatingActionButton(
+              child: Icon(
+                Icons.bookmark,
+                color: _gifList[index].saved
+                    ? Color.fromARGB(255, 252, 212, 81)
+                    : Colors.white,
+                size: 35,
+              ),
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                setState(() {
+                  _handleSaveButton(_gifList[index].id);
+                  for (int i = 0; i < _gifList.length; i++) {
+                    if (_gifList[i].id == _gifList[index].id) {
+                      _gifList[i].saved = !_gifList[i].saved;
                     }
-              
-                  });
-                  // Llamar a la función para manejar la lógica de like/unlike
-                },
-                elevation: 0,
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(Icons.shopping_cart, color: Colors.white, size: 35),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'share'.
-                },
-                elevation: 0,
-              ),
-              SizedBox(height: 25),
-              FloatingActionButton(
-                child: Icon(Icons.ios_share, color: Colors.white, size: 35),
-                backgroundColor: Colors.transparent,
-                onPressed: () {
-                  // Action for 'buy'.
-                },
-                elevation: 0,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+                  }
+                });
+                // Llamar a la función para manejar la lógica de like/unlike
+              },
+              elevation: 0,
+            ),
+            SizedBox(height: 25),
+            FloatingActionButton(
+              child: Icon(Icons.ios_share, color: Colors.white, size: 35),
+              backgroundColor: Colors.transparent,
+              onPressed: () {
+                // Acción para 'share'.
+              },
+              elevation: 0,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+
 
   Future<void> _playAudio(String url) async {
     try {
@@ -443,9 +485,14 @@ class _HomeScreenState extends State<HomeScreenState> {
         // Si ya le dio "like", se eliminará el "like"
         apiUrl =
             'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
+            if (_gifList[_currentIndex].likes < 0){
+              _gifList[_currentIndex].likes = 0;
+            } 
+            _gifList[_currentIndex].likes = _gifList[_currentIndex].likes - 1;
       } else {
         // Si aún no ha dado "like", se agregará el "like"
         apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
+        _gifList[_currentIndex].likes = _gifList[_currentIndex].likes + 1;
       }
 
       final token = UserSingleton().token;
@@ -462,6 +509,35 @@ class _HomeScreenState extends State<HomeScreenState> {
       }
     } catch (error) {
       print('Error al manejar el botón de like: $error');
+      // Manejar el error aquí
+    }
+  }
+
+  void _handleSaveButton(String postId) async {
+    try {
+      String apiUrl = '';
+      if (_gifList[_currentIndex].saved == true) {
+        apiUrl =
+            'http://217.182.70.161:6969/v1/api/interactions/unsave/$postId';
+          
+      } else {
+        apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/save/$postId';
+      }
+
+      final token = UserSingleton().token;
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 400) {
+      } else {
+        throw Exception('Failed to update post saved status');
+      }
+    } catch (error) {
+      print('Error al manejar el botón de guardado: $error');
       // Manejar el error aquí
     }
   }

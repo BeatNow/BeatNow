@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BeatNow/Models/UserSingleton.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 
 class SavedScreen extends StatefulWidget {
   @override
@@ -56,4 +58,21 @@ class _SavedScreen extends  State<SavedScreen> {
       ),
     );
   }
+  Future<Map<String, dynamic>> getSavedPosts() async {
+  final apiUrl = 'http://217.182.70.161:6969/v1/api/users/saved-posts';
+  final token = UserSingleton().token;
+  final response = await http.get(
+    Uri.parse(apiUrl),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final jsonResponse = convert.jsonDecode(response.body);
+    return jsonResponse;
+  } else {
+    throw Exception('Failed to fetch post information');
+  }
+}
 }
