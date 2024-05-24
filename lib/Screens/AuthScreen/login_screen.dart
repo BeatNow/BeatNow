@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Controllers/auth_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
@@ -14,6 +15,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
+  
+  
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -21,6 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
       AuthController>(); // Obtener instancia del controlador AuthController
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // Obtain shared preferences.
+  
 
   bool _obscurePassword = true;
 
@@ -38,6 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
         fontSize: 16.0,
       ),
     );
+
+
 
     return Scaffold(
       backgroundColor: Color(0xFF111111),
@@ -206,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
   Future<Map<String, dynamic>> getTokenUser(String username, String password) async {
     final apiUrl = Uri.parse('http://217.182.70.161:6969/token');
-
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     final body = {
       'username': username,
       'password': password,
@@ -219,6 +226,11 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       body: body,
     );
+
+    if (response.statusCode == 200) {
+      await prefs.setString('username', username);
+      await prefs.setString('password', password);
+    }
 
     // Decodificar y devolver la respuesta del servidor
     return json.decode(response.body);
@@ -372,4 +384,17 @@ Future<User?> signInWithGoogle(BuildContext context) async {
     throw Exception('Failed to register user: ${response.body}');
   }
 }
+
+void loginCache() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('username', 'aa');
+  await prefs.setString('password', 'aa');
+  final String? username = prefs.getString('username');
+  final String? password = prefs.getString('password');
+
+  if (username != null && password != null) {
+    _login(username, password, context);
+  }
+}
+
 }

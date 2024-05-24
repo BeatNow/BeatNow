@@ -1,6 +1,7 @@
 import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Controllers/auth_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -32,7 +33,7 @@ class AccountSettingsScreen extends StatelessWidget {
                 UserSingleton().email = '';
 
                 // Implementa la lógica para cerrar sesión
-                _authController.changeTab(0); // Cambiar a la pestaña 0
+                _authController.changeTab(9); // Cambiar a la pestaña 0
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -424,6 +425,7 @@ Future<Map<String, dynamic>?> updateEmail(String email, String password) async {
 // Implementar api de delete users
 Future<Map<String, dynamic>?> deleteUser() async {
   final apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/delete');
+  
   String token = UserSingleton().token;
   try {
     final response = await http.delete(
@@ -439,6 +441,9 @@ Future<Map<String, dynamic>?> deleteUser() async {
       UserSingleton().name = "";
       UserSingleton().username = "";
       UserSingleton().email = "";
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.remove('username');
+      prefs.remove('password');
 
       return null;
     } else if (response.statusCode == 401) {

@@ -1,3 +1,4 @@
+import 'package:BeatNow/Models/SavedPost.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BeatNow/Models/UserSingleton.dart';
@@ -9,7 +10,15 @@ class SavedScreen extends StatefulWidget {
   _SavedScreen createState() => _SavedScreen();
 }
 
-class _SavedScreen extends  State<SavedScreen> {
+class _SavedScreen extends State<SavedScreen> {
+  late Future<List<SavedPost>> _savedPosts;
+
+  @override
+  void initState() {
+    super.initState();
+    _savedPosts = getSavedPosts();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,43 +45,63 @@ class _SavedScreen extends  State<SavedScreen> {
             stops: [0.5, 1.0], // dónde comenzar y terminar cada color
           ),
         ),
-        child: GridView.builder(
-          padding: EdgeInsets.all(10.0),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 10.0,
-            crossAxisSpacing: 10.0,
-            childAspectRatio: 0.5, // Proporción 2:1 (alto:ancho)
-          ),
-          itemCount: 30, // Cantidad de elementos en la cuadrícula (ajusta según sea necesario)
-          itemBuilder: (context, index) {
-            return Container(
-              color: Colors.grey, // Color de fondo temporal
-              child: Center(
-                child: Text('Item $index',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            );
+        child: FutureBuilder<List<SavedPost>>(
+          future: _savedPosts,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return GridView.builder(
+                padding: EdgeInsets.all(10.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10.0,
+                  crossAxisSpacing: 10.0,
+                  childAspectRatio: 0.5, // Proporción 2:1 (alto:ancho)
+                ),
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage('http://172.203.251.28/beatnow/${snapshot.data![index].userId}/posts/${snapshot.data![index].postId}/caratula.jpg'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              );
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            // Por defecto, muestra un loading spinner.
+            return Center(child: CircularProgressIndicator());
           },
         ),
       ),
     );
   }
-  Future<Map<String, dynamic>> getSavedPosts() async {
-  final apiUrl = 'http://217.182.70.161:6969/v1/api/users/saved-posts';
-  final token = UserSingleton().token;
-  final response = await http.get(
-    Uri.parse(apiUrl),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
 
-  if (response.statusCode == 200) {
-    final jsonResponse = convert.jsonDecode(response.body);
-    return jsonResponse;
-  } else {
-    throw Exception('Failed to fetch post information');
+  Future<List<SavedPost>> getSavedPosts() async {
+    final apiUrl = 'http://217.182.70.161:6969/v1/api/users/saved-posts';
+    final token = UserSingleton().token;
+    final response = await http.get(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = convert.jsonDecode(response.body);
+      if (jsonResponse['saved_posts'] is List) {
+        return jsonResponse['saved_posts']
+            .map<SavedPost>((item) => SavedPost.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Saved posts is not a list');
+      }
+    } else {
+      throw Exception('Failed to fetch post information');
+    }
   }
-}
 }
