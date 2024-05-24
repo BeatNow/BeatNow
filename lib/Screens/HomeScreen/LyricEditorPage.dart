@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:http/http.dart' as http;
+import 'package:BeatNow/Models/UserSingleton.dart';
 
 class LyricEditorPage extends StatefulWidget {
   final String title;
@@ -41,40 +43,32 @@ class _LyricEditorPageState extends State<LyricEditorPage> {
       print('Speech recognition is not available');
       return;
     }
-    
+
     await _speech.initialize();
     if (!_speech.isAvailable) {
       print('Speech recognition is not available');
     }
   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _lyricController.dispose();
-    super.dispose();
-  }
-
-  Future<void> saveLyric() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> titles = prefs.getStringList('titles') ?? [];
-    List<String> lyrics = prefs.getStringList('lyrics') ?? [];
-
-    if (widget.index != null && widget.index! < titles.length) {
-      titles[widget.index!] = _titleController.text;
-      lyrics[widget.index!] = _lyricController.text;
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _lyricController.text = val.recognizedWords;
+          }),
+        );
+      }
     } else {
-      titles.add(_titleController.text);
-      lyrics.add(_lyricController.text);
+      _speech.stop();
     }
-
-    await prefs.setStringList('titles', titles);
-    await prefs.setStringList('lyrics', lyrics);
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text("Lyric saved!"),
-      duration: Duration(seconds: 2),
-    ));
+    setState(() {
+      _isListening = !_isListening;
+    });
   }
 
   void _toggleListening() {
@@ -105,43 +99,86 @@ class _LyricEditorPageState extends State<LyricEditorPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.index != null ? 'Edit Lyric' : 'Create New Lyric'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: saveLyric,
+  Future<void> saveLyric() async {
+    String apiUrl = "http://217.182.70.161:6969/v1/api/lyrics/";
+    final token = UserSingleton().token; // get the user token
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization':
+            'Bearer $token', // include the token in the request headers
+      },
+      body: jsonEncode(<String, String>{
+        'title': _titleController.text,
+        'lyrics': _lyricController.text,
+        'post_id': '664f749c516116a47bb171f3',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Lyric saved!"),
+        duration: Duration(seconds: 2),
+      ));
+    } else {
+      print(
+          'Failed to save lyric. Status code: ${response.statusCode}. Response body: ${response.body}');
+      throw Exception('Failed to save lyric.');
+    }
+  }
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Lyric Editor'),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.save),
+          onPressed: saveLyric,
+        ),
+        IconButton(
+          icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+          onPressed: _toggleListening,
+        ),
+      ],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Container(
+            alignment: Alignment.center,
+            child: TextFormField(
+              style: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+              controller: _titleController,
+              decoration: InputDecoration(
+                hintText: 'Title',
+                border: InputBorder.none,
+                isDense: true,
+                hintStyle: TextStyle(fontSize: 20.0, color: Colors.white,fontWeight: FontWeight.bold),
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
-          IconButton(
-            icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
-            onPressed: _toggleListening,
+          SizedBox(height: 14.0),
+          Expanded(
+            child: TextFormField(
+              controller: _lyricController,
+              decoration: InputDecoration(
+                hintText: 'Type or speak your lyrics here...',
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+            ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
-            ),
-            SizedBox(height: 16.0),
-            Expanded(
-              child: TextFormField(
-                controller: _lyricController,
-                decoration: InputDecoration(labelText: 'Lyric'),
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 }
