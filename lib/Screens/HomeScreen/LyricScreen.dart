@@ -1,3 +1,4 @@
+// ignore_for_file: unused_local_variable
 
 import 'dart:convert';
 
@@ -13,7 +14,16 @@ class LyricScreen extends StatefulWidget {
   _LyricScreenState createState() => _LyricScreenState();
 }
 
+List<dynamic> _lyricsList = [];
+List<dynamic> _lyricsList1 = [];
+
 class _LyricScreenState extends State<LyricScreen> {
+  @override
+  void initState() {
+    fetchLyrics();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<SharedPreferences>(
@@ -39,23 +49,19 @@ class _LyricScreenState extends State<LyricScreen> {
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: titles.length,
+                itemCount: _lyricsList.length,
                 itemBuilder: (context, index) {
-                  List<String> lines = lyrics[index].split('\n');
+                  List<String> lines = _lyricsList[index]['lyrics'].split('\n');
                   String firstTwoLines = lines.length > 1
                       ? lines.sublist(0, 2).join('\n')
                       : lines[0];
                   return ListTile(
-                    title: Text(titles[index]),
+                    title: Text(_lyricsList[index]['title']),
                     subtitle: Text(firstTwoLines),
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () async {
-                        titles.removeAt(index);
-                        lyrics.removeAt(index);
-                        await prefs.setStringList('titles', titles);
-                        await prefs.setStringList('lyrics', lyrics);
-                        setState(() {});
+                        // delete logic here
                       },
                     ),
                     onTap: () {
@@ -63,8 +69,8 @@ class _LyricScreenState extends State<LyricScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => LyricEditorPage(
-                                title: titles[index],
-                                lyric: lyrics[index],
+                                title: _lyricsList[index]['title'],
+                                lyric: _lyricsList[index]['lyrics'],
                                 index: index)),
                       ).then((_) {
                         setState(() {});
@@ -111,20 +117,24 @@ class _LyricScreenState extends State<LyricScreen> {
     );
   }
 }
-  Future<List<dynamic>> fetchLyrics() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = UserSingleton().token;
 
-    final response = await http.get(
-      Uri.parse('http://217.182.70.161:6969/v1/api/lyrics/user'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-      },
-    );
+void fetchLyrics() async {
+  final token = UserSingleton().token;
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load lyrics');
+  final response = await http.get(
+    Uri.parse('http://217.182.70.161:6969/v1/api/lyrics/user'),
+    headers: <String, String>{
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final jsonResponse = convert.jsonDecode(response.body);
+    _lyricsList.clear();
+    for (var data in jsonResponse) {
+      _lyricsList.add(data);
     }
+  } else {
+    throw Exception('status' + response.statusCode.toString());
   }
+}
