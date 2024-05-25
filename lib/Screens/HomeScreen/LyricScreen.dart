@@ -61,7 +61,12 @@ class _LyricScreenState extends State<LyricScreen> {
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () async {
-                        // delete logic here
+                        
+                        deleteLyric(_lyricsList[index]['_id']);
+                        setState(() {
+                          _lyricsList.removeAt(index);
+                        });
+
                       },
                     ),
                     onTap: () {
@@ -71,7 +76,9 @@ class _LyricScreenState extends State<LyricScreen> {
                             builder: (context) => LyricEditorPage(
                                 title: _lyricsList[index]['title'],
                                 lyric: _lyricsList[index]['lyrics'],
-                                index: index)),
+                                index: index,
+                                isEditing: true,
+                                lyricId: _lyricsList[index]['_id'])),
                       ).then((_) {
                         setState(() {});
                       });
@@ -95,7 +102,7 @@ class _LyricScreenState extends State<LyricScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => LyricEditorPage(
-                                title: "", lyric: "", index: null)),
+                                title: "", lyric: "", index: null, isEditing: false)),
                       ).then((_) {
                         setState(() {});
                       });
@@ -122,7 +129,7 @@ void fetchLyrics() async {
   final token = UserSingleton().token;
 
   final response = await http.get(
-    Uri.parse('http://217.182.70.161:6969/v1/api/lyrics/user'),
+    Uri.parse('http://217.182.70.161:6969/v1/api/users/lyrics'),
     headers: <String, String>{
       'Authorization': 'Bearer $token',
     },
@@ -138,3 +145,20 @@ void fetchLyrics() async {
     throw Exception('status' + response.statusCode.toString());
   }
 }
+void deleteLyric(String _LyricId) async {
+  final token = UserSingleton().token;
+
+  final response = await http.delete(
+    Uri.parse('http://217.182.70.161:6969/v1/api/lyrics/$_LyricId'),
+    headers: <String, String>{
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+   
+  } else {
+    throw Exception('status' + response.statusCode.toString());
+  }
+}
+

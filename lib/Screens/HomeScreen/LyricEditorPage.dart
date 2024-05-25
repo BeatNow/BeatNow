@@ -8,8 +8,14 @@ class LyricEditorPage extends StatefulWidget {
   final String title;
   final String lyric;
   final int? index;
-
-  LyricEditorPage({required this.title, required this.lyric, this.index});
+  final String lyricId;
+  final bool isEditing;
+  LyricEditorPage(
+      {required this.title,
+      required this.lyric,
+      this.index,
+      this.isEditing = false,
+      this.lyricId = ''});
 
   @override
   _LyricEditorPageState createState() => _LyricEditorPageState();
@@ -129,56 +135,99 @@ class _LyricEditorPageState extends State<LyricEditorPage> {
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Lyric Editor'),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.save),
-          onPressed: saveLyric,
-        ),
-        IconButton(
-          icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
-          onPressed: _toggleListening,
-        ),
-      ],
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Container(
-            alignment: Alignment.center,
-            child: TextFormField(
-              style: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
-              controller: _titleController,
-              decoration: InputDecoration(
-                hintText: 'Title',
-                border: InputBorder.none,
-                isDense: true,
-                hintStyle: TextStyle(fontSize: 20.0, color: Colors.white,fontWeight: FontWeight.bold),
-              ),
-              textAlign: TextAlign.center,
-            ),
+  Future<void> updateLyric(String PostId) async {
+    String apiUrl = "http://217.182.70.161:6969/v1/api/lyrics/$PostId";
+    final token = UserSingleton().token; // get the user token
+
+    final response = await http.put(
+      Uri.parse(apiUrl),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization':
+            'Bearer $token', // include the token in the request headers
+      },
+      body: jsonEncode(<String, String>{
+        'title': _titleController.text,
+        'lyrics': _lyricController.text,
+        'post_id': '664f749c516116a47bb171f3',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Lyric Updated Succesfully!"),
+        duration: Duration(seconds: 2),
+      ));
+    } else {
+      print(
+          'Failed to update lyric. Status code: ${response.statusCode}. Response body: ${response.body}');
+      throw Exception('Failed to update lyric.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Lyric Editor'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () {
+              if (widget.isEditing) {
+                updateLyric(widget.lyricId);
+                
+              } else {
+                saveLyric();
+              }
+            },
           ),
-          SizedBox(height: 14.0),
-          Expanded(
-            child: TextFormField(
-              controller: _lyricController,
-              decoration: InputDecoration(
-                hintText: 'Type or speak your lyrics here...',
-                border: InputBorder.none,
-                isDense: true,
-              ),
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
-            ),
+          IconButton(
+            icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+            onPressed: _toggleListening,
           ),
         ],
       ),
-    ),
-  );
-}
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(
+              alignment: Alignment.center,
+              child: TextFormField(
+                style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: 'Title',
+                  border: InputBorder.none,
+                  isDense: true,
+                  hintStyle: TextStyle(
+                      fontSize: 20.0,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(height: 14.0),
+            Expanded(
+              child: TextFormField(
+                controller: _lyricController,
+                decoration: InputDecoration(
+                  hintText: 'Type or speak your lyrics here...',
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
