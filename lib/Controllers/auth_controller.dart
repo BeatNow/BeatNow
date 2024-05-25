@@ -10,7 +10,6 @@ class AuthController extends GetxController {
 
   @override
   void onInit() {
-    checkLogin();
     super.onInit();
   }
 
