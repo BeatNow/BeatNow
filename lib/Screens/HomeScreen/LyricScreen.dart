@@ -76,7 +76,9 @@ class _LyricScreenState extends State<LyricScreen> {
                             builder: (context) => LyricEditorPage(
                                 title: _lyricsList[index]['title'],
                                 lyric: _lyricsList[index]['lyrics'],
-                                index: index)),
+                                index: index,
+                                isEditing: true,
+                                lyricId: _lyricsList[index]['_id'])),
                       ).then((_) {
                         setState(() {});
                       });
@@ -100,7 +102,7 @@ class _LyricScreenState extends State<LyricScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => LyricEditorPage(
-                                title: "", lyric: "", index: null)),
+                                title: "", lyric: "", index: null, isEditing: false)),
                       ).then((_) {
                         setState(() {});
                       });
