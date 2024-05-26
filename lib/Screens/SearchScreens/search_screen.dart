@@ -1,6 +1,11 @@
+import 'package:BeatNow/Models/OtherUserSingleton.dart';
+import 'package:BeatNow/Models/UserSingleton.dart';
+import 'package:BeatNow/Screens/ProfileScreen/profileother_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BeatNow/Controllers/auth_controller.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -10,8 +15,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   List<String> _searchHistory = [];
   final AuthController _authController = Get.find<AuthController>();
-  bool _searchingUsers = false; // Variable para controlar qué se está buscando
-  List<String> _selectedInstruments = [];
+  bool _searchingUsers = false;
+  List<Map<String, dynamic>> _userSearchResults = [];
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
           },
         ),
         actions: _searchingUsers
-            ? null // Si se está buscando usuarios, no mostrar acciones
+            ? null
             : [
                 IconButton(
                   icon: Icon(Icons.filter_alt),
@@ -57,7 +62,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 InkWell(
                   onTap: () {
                     setState(() {
-                      _searchingUsers = false; // Cambiar a búsqueda de beats
+                      _searchingUsers = false;
                     });
                   },
                   child: Padding(
@@ -75,7 +80,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 InkWell(
                   onTap: () {
                     setState(() {
-                      _searchingUsers = true; // Cambiar a búsqueda de usuarios
+                      _searchingUsers = true;
                     });
                   },
                   child: Padding(
@@ -93,6 +98,20 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             SizedBox(height: 16.0),
+            if (_searchingUsers) ...[
+              Text(
+                'User Search Results',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
+              ),
+              SizedBox(height: 8.0),
+              Expanded(
+                child: _buildUserSearchResults(),
+              ),
+            ],
+            SizedBox(height: 16.0),
             Text(
               'Search History',
               style: TextStyle(
@@ -101,7 +120,9 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             SizedBox(height: 8.0),
-            _buildSearchHistory(),
+            Expanded(
+              child: _buildSearchHistory(),
+            ),
           ],
         ),
       ),
@@ -109,7 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchHistory() {
-    return Column(
+    return ListView(
       children: _searchHistory.map((term) => _buildHistoryItem(term)).toList(),
     );
   }
@@ -138,146 +159,200 @@ class _SearchScreenState extends State<SearchScreen> {
         _searchHistory.insert(0, term);
       }
     });
+
+    if (_searchingUsers) {
+      _searchUsers(term).then((results) {
+        setState(() {
+          _userSearchResults = results
+              .map((user) => {'_id': user['_id'].toString(), 'username': user['username'].toString()})
+              .toList();
+        });
+      }).catchError((error) {
+        setState(() {
+          _userSearchResults = [];
+        });
+      });
+    }
   }
 
-void _showFilterPopup(BuildContext context) {
-  String selectedGenre = 'Rock';
-  double selectedPrice = 0.00;
-  int selectedBpm = 120;
-  String selectedInstrument =
-      'Guitar'; // Variable para almacenar el instrumento seleccionado
+  Widget _buildUserSearchResults() {
+    if (_userSearchResults.isEmpty) {
+      return Text('No se han encontrado resultados.');
+    }
+    return ListView(
+      children: _userSearchResults.map((user) {
+        return ListTile(
+          title: Text(user['username']!),
+          onTap: () {
+            if (user['_id'] != null && user['username'] != null) {
+              OtherUserSingleton().id = user['_id']!;
+              OtherUserSingleton().username = user['username']!;
+              Get.to(() => ProfileOtherScreen());
+            } else {
+              // Manejar caso donde user['_id'] o user['username'] es nulo
+              print('Usuario no válido: $_userSearchResults');
+            }
+          },
+        );
+      }).toList(),
+    );
+  }
 
-  List<String> instruments = [
-    'Guitar',
-    'Bass',
-    'Flute',
-    'Drums',
-    'Piano',
-    'Synth',
-    'Vocals',
-    'Strings',
-    'Brass',
-    'Harp'
-  ]; // Lista de instrumentos
+  void _showFilterPopup(BuildContext context) {
+    String selectedGenre = 'Rock';
+    double selectedPrice = 0.00;
+    int selectedBpm = 120;
+    String selectedInstrument = 'Guitar';
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return AlertDialog(
-            title: Text('Advanced Beat Filters'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Genre:'),
-                  DropdownButton<String>(
-                    value: selectedGenre,
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        setState(() {
-                          selectedGenre = newValue;
-                        });
-                      }
-                    },
-                    items: <String>['Trap', 'Hip-Hop', 'Pop', 'Rock', 'Jazz', 'Reggae', 'R&B', 'Country', 'Blues', 'Metal']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                  SizedBox(height: 16.0),
-                  Text('Price: \$${selectedPrice.toStringAsFixed(2)}'),
-                  Slider(
-                    value: selectedPrice,
-                    min: 0,
-                    max: 150,
-                    divisions: 30,
-                    onChanged: (double value) {
-                      setState(() {
-                        selectedPrice = value;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 16.0),
-                  Row(
-                    children: [
-                      Text('BPM: '),
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed: () {
+    List<String> instruments = [
+      'Guitar',
+      'Bass',
+      'Flute',
+      'Drums',
+      'Piano',
+      'Synth',
+      'Vocals',
+      'Strings',
+      'Brass',
+      'Harp'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text('Advanced Beat Filters'),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Genre:'),
+                    DropdownButton<String>(
+                      value: selectedGenre,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
                           setState(() {
-                            if (selectedBpm > 0) {
-                              selectedBpm--;
-                            }
+                            selectedGenre = newValue;
                           });
-                        },
-                      ),
-                      Text('$selectedBpm'),
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed: () {
-                          setState(() {
-                            if (selectedBpm < 300) {
-                              selectedBpm++;
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.0),
-                  // Menú desplegable para instrumentos
-                  Text('Instruments:'),
-                  DropdownButton<String>(
-                    value: selectedInstrument,
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
+                        }
+                      },
+                      items: <String>['Trap', 'Hip-Hop', 'Pop', 'Rock', 'Jazz', 'Reggae', 'R&B', 'Country', 'Blues', 'Metal']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(height: 16.0),
+                    Text('Price: \$${selectedPrice.toStringAsFixed(2)}'),
+                    Slider(
+                      value: selectedPrice,
+                      min: 0,
+                      max: 150,
+                      divisions: 30,
+                      onChanged: (double value) {
                         setState(() {
-                          selectedInstrument = newValue;
+                          selectedPrice = value;
                         });
-                      }
-                    },
-                    items: instruments
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                      },
+                    ),
+                    SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        Text('BPM: '),
+                        IconButton(
+                          icon: Icon(Icons.remove),
+                          onPressed: () {
+                            setState(() {
+                              if (selectedBpm > 0) {
+                                selectedBpm--;
+                              }
+                            });
+                          },
+                        ),
+                        Text('$selectedBpm'),
+                        IconButton(
+                          icon: Icon(Icons.add),
+                          onPressed: () {
+                            setState(() {
+                              if (selectedBpm < 300) {
+                                selectedBpm++;
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16.0),
+                    Text('Instruments:'),
+                    DropdownButton<String>(
+                      value: selectedInstrument,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            selectedInstrument = newValue;
+                          });
+                        }
+                      },
+                      items: instruments
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.red),
                   ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all<Color>(Colors.red),
+                  child: Text('Cancel'),
                 ),
-                child: Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Aquí puedes añadir lógica para aplicar los filtros
-                  Navigator.pop(context);
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Color(0xFF4E0566))
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF4E0566))
+                  ),
+                  child: Text('Apply'),
                 ),
-                child: Text('Apply'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<dynamic>> _searchUsers(String query) async {
+    final token = UserSingleton().token;
+    final response = await http.get(
+      Uri.parse('http://217.182.70.161:6969/v1/api/search/user?username=$query'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = convert.jsonDecode(response.body);
+      if (jsonResponse is List) {
+        return jsonResponse.where((user) => user['_id'] != null && user['username'] != null).toList();
+      } else {
+        throw Exception('Invalid response format');
+      }
+    } else {
+      throw Exception('Failed to load search results');
+    }
+  }
 }

@@ -45,8 +45,6 @@ class _HomeScreenState extends State<HomeScreenState> {
     // Cargar los primeros tres posts
     await _getNextPost();
     //Hacer condicional que si no encuentra posts que no haga nada
-    
-
   }
 
   Future<void> _getNextPost() async {
@@ -184,71 +182,67 @@ class _HomeScreenState extends State<HomeScreenState> {
     return LyricScreen();
   }
 
-
-
-Widget _buildCarousel(BuildContext context) {
-  // Reproducir la música al inicio del widget
-  return CarouselSlider.builder(
-    options: CarouselOptions(
-      height: MediaQuery.of(context).size.height,
-      enlargeCenterPage: false,
-      autoPlay: false,
-      viewportFraction: 1.0,
-      scrollDirection: Axis.vertical,
-      onPageChanged: (index, _) {
-        _loadMorePosts();
-
-        setState(() {
-          _currentIndex = index;
-          UserSingleton().current = _currentIndex;
-          _loadInitialPosts();
-          if (_selectedIndex == 2 || _selectedIndex == 0) {
-            _audioPlayer.stop();
-          } else if (_selectedIndex == 1) {
-            if (_gifList.length > _currentIndex) {
-              _playAudio(_gifList[_currentIndex].audioUrl);
-            }
-          }
-        });
-        if (index >= _gifList.length - 3) {
+  Widget _buildCarousel(BuildContext context) {
+    // Reproducir la música al inicio del widget
+    return CarouselSlider.builder(
+      options: CarouselOptions(
+        height: MediaQuery.of(context).size.height,
+        enlargeCenterPage: false,
+        autoPlay: false,
+        viewportFraction: 1.0,
+        scrollDirection: Axis.vertical,
+        onPageChanged: (index, _) {
           _loadMorePosts();
+
+          setState(() {
+            _currentIndex = index;
+            UserSingleton().current = _currentIndex;
+            _loadInitialPosts();
+            if (_selectedIndex == 2 || _selectedIndex == 0) {
+              _audioPlayer.stop();
+            } else if (_selectedIndex == 1) {
+              if (_gifList.length > _currentIndex) {
+                _playAudio(_gifList[_currentIndex].audioUrl);
+              }
+            }
+          });
+          if (index >= _gifList.length - 3) {
+            _loadMorePosts();
+          }
+        },
+      ),
+      itemCount: _gifList.length,
+      itemBuilder: (context, index, _) {
+        if (_gifList.length > index) {
+          final item = _gifList[index];
+          return Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  if (_isPlaying) {
+                    _audioPlayer.pause();
+                    _isPlaying = false;
+                  } else {
+                    _isPlaying = true;
+                    _audioPlayer.resume();
+                  }
+                },
+                child: Image.network(
+                  item.coverImageUrl,
+                  fit: BoxFit.cover,
+                  height: double.infinity,
+                ),
+              ),
+              _buildDynamicButtons(context, index),
+            ],
+          );
+        } else {
+          return Container(); // O cualquier otro Widget de carga o de relleno
         }
       },
-    ),
-    itemCount: _gifList.length,
-    itemBuilder: (context, index, _) {
-      if (_gifList.length > index) {
-        final item = _gifList[index];
-        return Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            GestureDetector(
-              onTap: () {
-                if (_isPlaying) {
-                  _audioPlayer.pause();
-                  _isPlaying = false;
-                } else {
-                  _isPlaying = true;
-                  _audioPlayer.resume();
-                }
-                
-              },
-              child: Image.network(
-                item.coverImageUrl,
-                fit: BoxFit.cover,
-                height: double.infinity,
-              ),
-            ),
-            _buildDynamicButtons(context, index),
-          ],
-        );
-      } else {
-        return Container(); // O cualquier otro Widget de carga o de relleno
-      }
-    },
-  );
-}
-
+    );
+  }
 
   void _loadMorePosts() async {
     // Cargar tres posts más al llegar al final del carrusel
@@ -258,129 +252,142 @@ Widget _buildCarousel(BuildContext context) {
   }
 
   Widget _buildDynamicButtons(BuildContext context, int index) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 35, right: 10),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_gifList[index].title,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 35, right: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _gifList[index].title,
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 25,
-                          fontWeight: FontWeight.bold)),
-                  SizedBox(height: 10),
-                  Text(_gifList[index].description,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold)),
-                  SizedBox(height: 12),
+                          fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Container(
+                      width: 300, // Margen a la derecha
+                      child: Text(
+                        _gifList[index].description,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize:
+                                17, // Ajusta el tamaño según sea necesario
+                            fontWeight: FontWeight.bold),
+                        softWrap: true,
+                        overflow: TextOverflow
+                            .ellipsis, // Ajuste para evitar overflow
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(width: 10),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  OtherUserSingleton().username =
+                      _gifList[_currentIndex].username;
+                  OtherUserSingleton().id = _gifList[_currentIndex].userId;
+                  OtherUserSingleton().name = _gifList[_currentIndex].username;
+
+                  _authController.changeTab(8);
+                },
+                elevation: 0,
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundImage: NetworkImage(
+                    'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+                  ),
+                ),
+              ),
+              SizedBox(height: 25),
+              Column(
+                children: [
+                  FloatingActionButton(
+                    child: Icon(
+                      Icons.favorite,
+                      color:
+                          _gifList[index].liked ? Colors.purple : Colors.white,
+                      size: 35,
+                    ),
+                    backgroundColor: Colors.transparent,
+                    onPressed: () {
+                      setState(() {
+                        _gifList[index].liked = !_gifList[index].liked;
+                      });
+                      if (_gifList[index].liked) {
+                        likePost(_gifList[index].id);
+                      } else {
+                        unlikePost(_gifList[index].id);
+                      }
+                    },
+                    elevation: 0,
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    _gifList[index].likes.toString(),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-        SizedBox(width: 10),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                OtherUserSingleton().username = _gifList[_currentIndex].username;
-                OtherUserSingleton().id = _gifList[_currentIndex].userId;
-                OtherUserSingleton().name = _gifList[_currentIndex].username;
-
-                _authController.changeTab(8);
-              },
-              elevation: 0,
-              child: CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(
-                  'http://172.203.251.28/beatnow/${_gifList[index].userId}/photo_profile/photo_profile.png',
+              SizedBox(height: 15),
+              FloatingActionButton(
+                child: Icon(
+                  Icons.bookmark,
+                  color: _gifList[index].saved
+                      ? Color.fromARGB(255, 252, 212, 81)
+                      : Colors.white,
+                  size: 35,
                 ),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  setState(() {
+                    _gifList[index].saved = !_gifList[index].saved;
+                  });
+                  if (_gifList[index].saved) {
+                    savePost(_gifList[index].id);
+                  } else {
+                    unsavePost(_gifList[index].id);
+                  }
+                },
+                elevation: 0,
               ),
-            ),
-            SizedBox(height: 25),
-            Column(
-              children: [
-                FloatingActionButton(
-                  child: Icon(
-                    Icons.favorite,
-                    color: _gifList[index].liked ? Colors.purple : Colors.white,
-                    size: 35,
-                  ),
-                  backgroundColor: Colors.transparent,
-                  onPressed: () {
-                    setState(() {
-                      _gifList[index].liked = !_gifList[index].liked;
-                    });
-                    if (_gifList[index].liked) {
-                      likePost(_gifList[index].id);
-                    } else {
-                      unlikePost(_gifList[index].id);
-                    }
-                  },
-                  elevation: 0,
-                ),
-                SizedBox(height: 5),
-                Text(
-                  _gifList[index].likes.toString(),
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            SizedBox(height: 15),
-            FloatingActionButton(
-              child: Icon(
-                Icons.bookmark,
-                color: _gifList[index].saved
-                    ? Color.fromARGB(255, 252, 212, 81)
-                    : Colors.white,
-                size: 35,
+              SizedBox(height: 25),
+              FloatingActionButton(
+                child: Icon(Icons.ios_share, color: Colors.white, size: 35),
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  // Acción para 'share'.
+                },
+                elevation: 0,
               ),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                setState(() {
-                  _gifList[index].saved = !_gifList[index].saved;
-                });
-                if (_gifList[index].saved) {
-                  savePost(_gifList[index].id);
-                } else {
-                  unsavePost(_gifList[index].id);
-                }
-              },
-              elevation: 0,
-            ),
-            SizedBox(height: 25),
-            FloatingActionButton(
-              child: Icon(Icons.ios_share, color: Colors.white, size: 35),
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                // Acción para 'share'.
-              },
-              elevation: 0,
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _playAudio(String url) async {
     try {
@@ -392,90 +399,94 @@ Widget _buildCarousel(BuildContext context) {
     }
   }
 
-void likePost(String postId) async {
-  try {
-    String apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
-    _gifList[_currentIndex].likes = _gifList[_currentIndex].likes + 1;
+  void likePost(String postId) async {
+    try {
+      String apiUrl =
+          'http://217.182.70.161:6969/v1/api/interactions/like/$postId';
+      _gifList[_currentIndex].likes = _gifList[_currentIndex].likes + 1;
 
-    final token = UserSingleton().token;
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final token = UserSingleton().token;
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 400) {
-      throw Exception('Failed to like post');
+      if (response.statusCode != 200 && response.statusCode != 400) {
+        throw Exception('Failed to like post');
+      }
+    } catch (error) {
+      print('Error al dar like al post: $error');
     }
-  } catch (error) {
-    print('Error al dar like al post: $error');
   }
-}
 
-void unlikePost(String postId) async {
-  try {
-    String apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
-    if (_gifList[_currentIndex].likes < 0) {
-      _gifList[_currentIndex].likes = 0;
+  void unlikePost(String postId) async {
+    try {
+      String apiUrl =
+          'http://217.182.70.161:6969/v1/api/interactions/unlike/$postId';
+      if (_gifList[_currentIndex].likes < 0) {
+        _gifList[_currentIndex].likes = 0;
+      }
+      _gifList[_currentIndex].likes = _gifList[_currentIndex].likes - 1;
+
+      final token = UserSingleton().token;
+      final response = await http.delete(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 400) {
+        //throw Exception('Failed to unlike post');
+      }
+    } catch (error) {
+      print('Error al quitar like al post: $error');
     }
-    _gifList[_currentIndex].likes = _gifList[_currentIndex].likes - 1;
-
-    final token = UserSingleton().token;
-    final response = await http.delete(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 400) {
-      //throw Exception('Failed to unlike post');
-    }
-  } catch (error) {
-    print('Error al quitar like al post: $error');
   }
-}
 
-void savePost(String postId) async {
-  try {
-    String apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/save/$postId';
+  void savePost(String postId) async {
+    try {
+      String apiUrl =
+          'http://217.182.70.161:6969/v1/api/interactions/save/$postId';
 
-    final token = UserSingleton().token;
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final token = UserSingleton().token;
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 400) {
-      throw Exception('Failed to save post');
+      if (response.statusCode != 200 && response.statusCode != 400) {
+        throw Exception('Failed to save post');
+      }
+    } catch (error) {
+      print('Error al guardar el post: $error');
     }
-  } catch (error) {
-    print('Error al guardar el post: $error');
   }
-}
 
-void unsavePost(String postId) async {
-  try {
-    String apiUrl = 'http://217.182.70.161:6969/v1/api/interactions/unsave/$postId';
+  void unsavePost(String postId) async {
+    try {
+      String apiUrl =
+          'http://217.182.70.161:6969/v1/api/interactions/unsave/$postId';
 
-    final token = UserSingleton().token;
-    final response = await http.delete(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final token = UserSingleton().token;
+      final response = await http.delete(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 400) {
-      throw Exception('Failed to unsave post');
+      if (response.statusCode != 200 && response.statusCode != 400) {
+        throw Exception('Failed to unsave post');
+      }
+    } catch (error) {
+      print('Error al quitar el post guardado: $error');
     }
-  } catch (error) {
-    print('Error al quitar el post guardado: $error');
   }
-}
 }
 
 Future<Map<String, dynamic>> getPostInfo() async {

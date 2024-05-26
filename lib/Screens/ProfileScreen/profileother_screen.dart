@@ -108,7 +108,7 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  OtherUserSingleton().name,
+                  OtherUserSingleton().username,
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
