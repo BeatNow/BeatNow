@@ -212,36 +212,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      // Acción cuando se presiona el botón "Editar Perfil"
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Acción cuando se presiona el botón "Editar Perfil"
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Editar Perfil',
-                      style: TextStyle(color: Colors.white),
+                      child: Text(
+                        'Edit Profile',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
-                  OutlinedButton(
-                    onPressed: () {
-                      _authController.changeTab(5);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _authController.changeTab(5);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Configuración de la Cuenta',
-                      style: TextStyle(color: Colors.white),
+                      child: Text(
+                        'Account Settings',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
