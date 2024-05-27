@@ -35,38 +35,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final userSingleton = UserSingleton();
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
-  List<dynamic>? _posts; // Lista para almacenar los posts
+  List<dynamic>? _posts;
+  Map<String, int>? _followersFollowing; // Cambiado a Map<String, int> para almacenar seguidores y seguidos_
 
   @override
   void initState() {
     super.initState();
-    _fetchUserPosts();
+    _initializeProfileData();
   }
 
-  Future<void> _fetchUserPosts() async {
-    final username = userSingleton.username;
-    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/posts/$username');
-    final token = userSingleton.token;
-
-    try {
-      final response = await http.get(
-        apiUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        print('Response JSON: $jsonResponse'); // Debugging line to print the JSON response
-        setState(() {
-          _posts = jsonResponse;
-        });
-      } else {
-        throw Exception('Failed to load posts');
-      }
-    } catch (error) {
-      print('Error fetching user posts: $error');
-    }
+  Future<void> _initializeProfileData() async {
+    await _fetchUserPosts();
+    _followersFollowing = await _fetchFollowersFollowing(UserSingleton().id);
+    setState(() {}); // Asegúrate de actualizar la interfaz de usuario después de cargar los datos
   }
 
   void _onProfileImageClicked(BuildContext context) {
@@ -82,12 +63,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: Text('Take Photo'),
                 onTap: () async {
                   Navigator.pop(context); // Close the bottom sheet
-                  // Add logic to take photo
-                  final pickedFile =
-                      await ImagePicker().getImage(source: ImageSource.camera);
+                  final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
                   if (pickedFile != null) {
-                    File imageFile =
-                        File(pickedFile.path); // Convierte XFile a File aquí
+                    File imageFile = File(pickedFile.path); // Convierte XFile a File aquí
                     changePhoto(imageFile);
                   }
                 },
@@ -97,15 +75,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: Text('Choose from Gallery'),
                 onTap: () async {
                   Navigator.pop(context); // Cierra la hoja inferior
-                  // Solicita permiso para acceder a la galería
-
                   final ImagePicker picker = ImagePicker();
-                  final XFile? pickedFile =
-                      await picker.pickImage(source: ImageSource.gallery);
-
+                  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
                   if (pickedFile != null) {
-                    File imageFile =
-                        File(pickedFile.path); // Convierte XFile a File aquí
+                    File imageFile = File(pickedFile.path); // Convierte XFile a File aquí
                     changePhoto(imageFile); // Llama a changePhoto con el archivo
                   }
                 },
@@ -186,11 +159,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        _buildStatColumn('Posts', '0'),
+                        _buildStatColumn('Posts', '${_posts?.length ?? 0}'),
                         SizedBox(width: 20),
-                        _buildStatColumn('Following', '342'),
+                        _buildStatColumn('Following', '${_followersFollowing?['following'] ?? 0}'),
                         SizedBox(width: 20),
-                        _buildStatColumn('Followers', '1.8M'),
+                        _buildStatColumn('Followers', '${_followersFollowing?['followers'] ?? 0}'),
                       ],
                     ),
                   ],
@@ -293,21 +266,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: <Widget>[
         Text(
           count,
-          style: TextStyle(
-              fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         Text(
           label,
-          style: TextStyle(
-              fontSize: 16.0, fontWeight: FontWeight.w400, color: Colors.white),
+          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w400, color: Colors.white),
         ),
       ],
     );
   }
 
   Future<void> deletePhoto() async {
-    Uri apiUrl = Uri.parse(
-        'http://217.182.70.161:6969/v1/api/users/delete_photo_profile');
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/delete_photo_profile');
     final token = UserSingleton().token;
 
     try {
@@ -335,16 +305,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> changePhoto(File photo) async {
-    Uri apiUrl = Uri.parse(
-        'http://217.182.70.161:6969/v1/api/users/change_photo_profile');
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/change_photo_profile');
     final token = UserSingleton().token;
 
     try {
       var request = http.MultipartRequest('PUT', apiUrl)
         ..headers['Authorization'] = 'Bearer $token'
         ..headers['Content-Type'] = 'multipart/form-data'
-        ..files.add(await http.MultipartFile.fromPath('file', photo.path,
-            contentType: MediaType('image', 'jpeg')));
+        ..files.add(await http.MultipartFile.fromPath('file', photo.path, contentType: MediaType('image', 'jpeg')));
 
       var response = await request.send();
 
@@ -354,7 +322,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _hasProfileImage = false;
           _profileImagePath = '';
         });
-        // Leer y procesar la respuesta si es necesario
         final respStr = await response.stream.bytesToString();
         print(respStr);
       } else {
@@ -362,6 +329,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (error) {
       print('Error uploading image: $error');
+    }
+  }
+
+  Future<void> _fetchUserPosts() async {
+    final username = userSingleton.username;
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/posts/$username');
+    final token = userSingleton.token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        print('Response JSON: $jsonResponse'); // Debugging line to print the JSON response
+        setState(() {
+          _posts = jsonResponse;
+        });
+      } else {
+        throw Exception('Failed to load posts');
+      }
+    } catch (error) {
+      print('Error fetching user posts: $error');
+    }
+  }
+
+  Future<Map<String, int>> _fetchFollowersFollowing(String userId) async {
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/profile/$userId');
+    final token = userSingleton.token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return {
+          'followers': jsonResponse['followers'],
+          'following': jsonResponse['following'],
+        };
+      } else {
+        throw Exception('Failed to load followers and following');
+      }
+    } catch (error) {
+      print('Error fetching followers and following: $error');
+      return {'followers': 0, 'following': 0}; // En caso de error, retorna valores predeterminados
     }
   }
 }

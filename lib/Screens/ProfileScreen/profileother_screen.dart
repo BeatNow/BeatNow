@@ -34,16 +34,22 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
   final userSingleton = OtherUserSingleton();
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
-  List<dynamic>? _posts; // Lista para almacenar los posts
+  List<dynamic>? _posts; 
+  Map<String, int>? _followersFollowing;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserPosts(OtherUserSingleton().username);
+    _initializeProfileData();
+  }
+
+  Future<void> _initializeProfileData() async {
+    await _fetchUserPosts(OtherUserSingleton().username);
+    _followersFollowing = await _fetchFollowersFollowing(OtherUserSingleton().id);
+    setState(() {}); // Asegúrate de actualizar la interfaz de usuario después de cargar los datos
   }
 
   Future<void> _fetchUserPosts(String username) async {
-    
     Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/posts/$username');
     final token = UserSingleton().token;
 
@@ -61,10 +67,36 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
           _posts = jsonResponse;
         });
       } else {
-        throw Exception('Failed to load posts'+response.statusCode.toString());
+        throw Exception('Failed to load posts: ${response.statusCode}');
       }
     } catch (error) {
       print('Error fetching user posts: $error');
+    }
+  }
+
+  Future<Map<String, int>> _fetchFollowersFollowing(String userId) async {
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/profile/$userId');
+    final token = UserSingleton().token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return {
+          'followers': jsonResponse['followers'],
+          'following': jsonResponse['following'],
+        };
+      } else {
+        throw Exception('Failed to load followers and following');
+      }
+    } catch (error) {
+      print('Error fetching followers and following: $error');
+      return {'followers': 0, 'following': 0}; // En caso de error, retorna valores predeterminados
     }
   }
 
@@ -122,11 +154,11 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        _buildStatColumn('Posts', '0'),
+                        _buildStatColumn('Posts', '${_posts?.length ?? 0}'),
                         SizedBox(width: 20),
-                        _buildStatColumn('Following', '342'),
+                        _buildStatColumn('Following', '${_followersFollowing?['following']}'),
                         SizedBox(width: 20),
-                        _buildStatColumn('Followers', '1.8M'),
+                        _buildStatColumn('Followers', '${_followersFollowing?['followers']}'),
                       ],
                     ),
                   ],
@@ -180,6 +212,7 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
                         ),
                       ),
                       child: Text(
+                        
                         'Follow',
                         style: TextStyle(color: Colors.white),
                       ),
@@ -231,14 +264,42 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
         Text(
           count,
           style: TextStyle(
-              fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
+            fontSize: 22.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         Text(
           label,
           style: TextStyle(
-              fontSize: 16.0, fontWeight: FontWeight.w400, color: Colors.white),
+            fontSize: 16.0,
+            fontWeight: FontWeight.w400,
+            color: Colors.white,
+          ),
         ),
       ],
     );
+  }
+    Future<int> _isFollowing(String userId) async {
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/profile/$userId');
+    final token = userSingleton.token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          ' Authorization ': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+         return jsonResponse['is_following'];
+      } else {
+        throw Exception('Failed to load followers and following');
+      }
+    } catch (error) {
+      print('Error fetching followers and following: $error');
+       return 0; // En caso de error, retorna valores predeterminados
+    }
   }
 }
