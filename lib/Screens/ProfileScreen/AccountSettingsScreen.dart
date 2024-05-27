@@ -15,14 +15,14 @@ class AccountSettingsScreen extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Cerrar Sesión'),
-          content: Text('¿Estás seguro de que quieres cerrar sesión?'),
+          title: Text('Log Out'),
+          content: Text('Are you sure you want to log out?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancelar'),
+              child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -37,7 +37,7 @@ class AccountSettingsScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cerrar Sesión',
+                'Log Out',
                 style: TextStyle(color: Colors.red), // Color rojo
               ),
             ),
@@ -58,16 +58,16 @@ class AccountSettingsScreen extends StatelessWidget {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: Text('Eliminar Cuenta'),
+              title: Text('Delete account'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Introduce tu contraseña:'),
+                  Text('Enter your password:'),
                   TextFormField(
                     controller: passwordController,
                     obscureText: obscurePassword,
                     decoration: InputDecoration(
-                      hintText: 'Contraseña',
+                      hintText: 'Password',
                       suffixIcon: IconButton(
                         icon: Icon(obscurePassword
                             ? Icons.visibility
@@ -88,7 +88,7 @@ class AccountSettingsScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancelar'),
+                  child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -101,7 +101,7 @@ class AccountSettingsScreen extends StatelessWidget {
                     _authController.changeTab(0);
                   },
                   child: Text(
-                    'Eliminar Cuenta',
+                    'Delete Account',
                     style: TextStyle(color: Colors.red), // Color rojo
                   ),
                 ),
@@ -127,13 +127,13 @@ class AccountSettingsScreen extends StatelessWidget {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: Text('Cambiar Contraseña'),
+              title: Text('Change Password'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildPasswordTextField(
                     controller: currentPasswordController,
-                    hintText: 'Contraseña actual',
+                    hintText: 'Actual Password',
                     showPassword: showCurrentPassword,
                     togglePasswordVisibility: () {
                       setState(() {
@@ -143,7 +143,7 @@ class AccountSettingsScreen extends StatelessWidget {
                   ),
                   _buildPasswordTextField(
                     controller: newPasswordController,
-                    hintText: 'Nueva contraseña',
+                    hintText: 'New Password',
                     showPassword: showNewPassword,
                     togglePasswordVisibility: () {
                       setState(() {
@@ -153,7 +153,7 @@ class AccountSettingsScreen extends StatelessWidget {
                   ),
                   _buildPasswordTextField(
                     controller: confirmPasswordController,
-                    hintText: 'Confirmar nueva contraseña',
+                    hintText: 'Confirm new password',
                     showPassword: showConfirmPassword,
                     togglePasswordVisibility: () {
                       setState(() {
@@ -168,7 +168,7 @@ class AccountSettingsScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancelar'),
+                  child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -177,7 +177,7 @@ class AccountSettingsScreen extends StatelessWidget {
                     String newPassword = newPasswordController.text;
                     String confirmPassword = confirmPasswordController.text;
                     if (newPassword != confirmPassword) {
-                      print('Las contraseñas no coinciden');
+                      print('Passwords do not match');
                       return;
                     } else {
                       changePassword(UserSingleton().username, currentPassword,
@@ -185,7 +185,7 @@ class AccountSettingsScreen extends StatelessWidget {
                       Navigator.of(context).pop();
                     }
                   },
-                  child: Text('Cambiar Contraseña'),
+                  child: Text('Change Password'),
                 ),
               ],
             );
@@ -228,7 +228,7 @@ class AccountSettingsScreen extends StatelessWidget {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: Text('Cambiar Correo Electrónico'),
+              title: Text('Change Email Adress'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -236,14 +236,14 @@ class AccountSettingsScreen extends StatelessWidget {
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: 'Nuevo correo electrónico',
+                      hintText: 'New Email Address',
                     ),
                   ),
                   TextFormField(
                     controller: passwordController,
                     obscureText: obscurePassword,
                     decoration: InputDecoration(
-                      hintText: 'Contraseña',
+                      hintText: 'Password',
                       suffixIcon: IconButton(
                         icon: Icon(obscurePassword
                             ? Icons.visibility
@@ -264,7 +264,7 @@ class AccountSettingsScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancelar'),
+                  child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -274,7 +274,7 @@ class AccountSettingsScreen extends StatelessWidget {
                     updateEmail(newEmail, password);
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cambiar Correo Electrónico'),
+                  child: Text('Change Email Address'),
                 ),
               ],
             );
@@ -288,7 +288,7 @@ class AccountSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Configuración de la Cuenta'),
+        title: Text('Account Settings'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -314,15 +314,15 @@ class AccountSettingsScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  _buildListTile('Cambiar Correo Electrónico', Icons.email,
+                  _buildListTile('Change Email Adress', Icons.email,
                       () => _onChangeEmailClicked(context)),
-                  _buildListTile('Cambiar Contraseña', Icons.lock,
+                  _buildListTile('Change Password', Icons.lock,
                       () => _onChangePasswordClicked(context)),
-                  _buildListTile('Cuentas Bloqueadas', Icons.block,
+                  _buildListTile('Blocked Accounts', Icons.block,
                       null), // Cuenta bloqueada
-                  _buildListTile('Cerrar Sesión', Icons.exit_to_app,
+                  _buildListTile('Log Out', Icons.exit_to_app,
                       () => _onSignOutClicked(context)),
-                  _buildListTile('Eliminar Cuenta', Icons.delete,
+                  _buildListTile('Delete Account', Icons.delete,
                       () => _onDeleteAccountClicked(context)),
                 ],
               ),
@@ -356,7 +356,7 @@ class AccountSettingsScreen extends StatelessWidget {
         style: TextStyle(
           color: disabled
               ? Colors.grey
-              : (title == 'Eliminar Cuenta'
+              : (title == 'Delete Account'
                   ? Colors.red
                   : Colors.white), // Color rojo para "Eliminar Cuenta"
         ),
@@ -365,7 +365,7 @@ class AccountSettingsScreen extends StatelessWidget {
         icon,
         color: disabled
             ? Colors.grey
-            : (title == 'Eliminar Cuenta'
+            : (title == 'Delete Account'
                 ? Colors.red
                 : Colors.white), // Color rojo para "Eliminar Cuenta"
       ),
