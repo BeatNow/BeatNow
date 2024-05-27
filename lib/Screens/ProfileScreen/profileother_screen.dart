@@ -1,11 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:BeatNow/Models/OtherUserSingleton.dart';
+import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../../Controllers/auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
-import 'package:http_parser/http_parser.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,8 +34,39 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
   final userSingleton = OtherUserSingleton();
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
+  List<dynamic>? _posts; // Lista para almacenar los posts
 
-  // Function to handle when the profile image is clicked
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserPosts(OtherUserSingleton().username);
+  }
+
+  Future<void> _fetchUserPosts(String username) async {
+    
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/posts/$username');
+    final token = UserSingleton().token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        print('Response JSON: $jsonResponse'); // Debugging line to print the JSON response
+        setState(() {
+          _posts = jsonResponse;
+        });
+      } else {
+        throw Exception('Failed to load posts'+response.statusCode.toString());
+      }
+    } catch (error) {
+      print('Error fetching user posts: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +139,7 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  OtherUserSingleton().name,
+                  OtherUserSingleton().username,
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
@@ -159,25 +190,32 @@ class _ProfileOtherScreenState extends State<ProfileOtherScreen> {
             ),
             SizedBox(height: 30),
             Expanded(
-              child: GridView.builder(
-                padding: EdgeInsets.all(10.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10.0,
-                  crossAxisSpacing: 10.0,
-                  childAspectRatio: 0.5, // Proporción 2:1 (alto:ancho)
-                ),
-                itemCount: 30, // Cantidad de elementos en la cuadrícula
-                itemBuilder: (context, index) {
-                  return Container(
-                    color: Colors.grey, // Color de fondo temporal
-                    child: Center(
-                      child: Text('Item $index',
-                          style: TextStyle(color: Colors.white)),
+              child: _posts == null
+                  ? Center(child: CircularProgressIndicator())
+                  : GridView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 10.0,
+                        crossAxisSpacing: 10.0,
+                        childAspectRatio: 9 / 16, // Proporción 16:9 vertical
+                      ),
+                      itemCount: _posts!.length,
+                      itemBuilder: (context, index) {
+                        final post = _posts![index];
+                        print('Post: $post'); // Debugging line to print each post
+                        return Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                'http://172.203.251.28/beatnow/${post['user_id']}/posts/${post['_id']}/caratula.jpg',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

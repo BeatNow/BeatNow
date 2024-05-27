@@ -1,5 +1,5 @@
-
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,11 +7,11 @@ import 'package:http/http.dart' as http;
 import '../../Controllers/auth_controller.dart'; // Ajusta la importación según la estructura de tu proyecto
 import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:http_parser/http_parser.dart';
- 
+
 void main() {
   runApp(MyApp());
 }
- 
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -24,19 +24,51 @@ class MyApp extends StatelessWidget {
     );
   }
 }
- 
+
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
- 
+
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = Get.find<AuthController>();
   final userSingleton = UserSingleton();
   bool _hasProfileImage = false; // Cambiado a falso inicialmente
   String? _profileImagePath; // Ruta de la imagen de perfil
- 
-  // Function to handle when the profile image is clicked
+  List<dynamic>? _posts; // Lista para almacenar los posts
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserPosts();
+  }
+
+  Future<void> _fetchUserPosts() async {
+    final username = userSingleton.username;
+    Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/posts/$username');
+    final token = userSingleton.token;
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        print('Response JSON: $jsonResponse'); // Debugging line to print the JSON response
+        setState(() {
+          _posts = jsonResponse;
+        });
+      } else {
+        throw Exception('Failed to load posts');
+      }
+    } catch (error) {
+      print('Error fetching user posts: $error');
+    }
+  }
+
   void _onProfileImageClicked(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -56,8 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (pickedFile != null) {
                     File imageFile =
                         File(pickedFile.path); // Convierte XFile a File aquí
-                    changePhoto(
-                        imageFile);
+                    changePhoto(imageFile);
                   }
                 },
               ),
@@ -67,16 +98,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   Navigator.pop(context); // Cierra la hoja inferior
                   // Solicita permiso para acceder a la galería
- 
+
                   final ImagePicker picker = ImagePicker();
                   final XFile? pickedFile =
                       await picker.pickImage(source: ImageSource.gallery);
- 
+
                   if (pickedFile != null) {
                     File imageFile =
                         File(pickedFile.path); // Convierte XFile a File aquí
-                    changePhoto(
-                        imageFile); // Llama a changePhoto con el archivo
+                    changePhoto(imageFile); // Llama a changePhoto con el archivo
                   }
                 },
               ),
@@ -100,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -219,32 +249,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 30),
             Expanded(
-              child: GridView.builder(
-                padding: EdgeInsets.all(10.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10.0,
-                  crossAxisSpacing: 10.0,
-                  childAspectRatio: 0.5, // Proporción 2:1 (alto:ancho)
-                ),
-                itemCount: 30, // Cantidad de elementos en la cuadrícula
-                itemBuilder: (context, index) {
-                  return Container(
-                    color: Colors.grey, // Color de fondo temporal
-                    child: Center(
-                      child: Text('Item $index',
-                          style: TextStyle(color: Colors.white)),
+              child: _posts == null
+                  ? Center(child: CircularProgressIndicator())
+                  : GridView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 10.0,
+                        crossAxisSpacing: 10.0,
+                        childAspectRatio: 9 / 16, // Proporción 16:9 vertical
+                      ),
+                      itemCount: _posts!.length,
+                      itemBuilder: (context, index) {
+                        final post = _posts![index];
+                        print('Post: $post'); // Debugging line to print each post
+                        return Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                'http://172.203.251.28/beatnow/${post['user_id']}/posts/${post['_id']}/caratula.jpg',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
       ),
     );
   }
- 
+
   Widget _buildStatColumn(String label, String count) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -263,21 +300,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
- 
+
   Future<void> deletePhoto() async {
     Uri apiUrl = Uri.parse(
         'http://217.182.70.161:6969/v1/api/users/delete_photo_profile');
     final token = UserSingleton().token;
- 
+
     try {
-      final response = await http.post(
+      final response = await http.delete(
         apiUrl,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       );
- 
+
       if (response.statusCode == 200) {
         // Clear profile photo data
         setState(() {
@@ -292,21 +329,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Handle error appropriately, like showing a snackbar or dialog
     }
   }
- 
+
   Future<void> changePhoto(File photo) async {
     Uri apiUrl = Uri.parse(
         'http://217.182.70.161:6969/v1/api/users/change_photo_profile');
     final token = UserSingleton().token;
- 
+
     try {
-      var request = http.MultipartRequest('POST', apiUrl)
+      var request = http.MultipartRequest('PUT', apiUrl)
         ..headers['Authorization'] = 'Bearer $token'
         ..headers['Content-Type'] = 'multipart/form-data'
         ..files.add(await http.MultipartFile.fromPath('file', photo.path,
             contentType: MediaType('image', 'jpeg')));
- 
+
       var response = await request.send();
- 
+
       if (response.statusCode == 200) {
         print('Image uploaded successfully');
         setState(() {
