@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:BeatNow/Controllers/auth_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -17,6 +18,24 @@ class _SearchScreenState extends State<SearchScreen> {
   final AuthController _authController = Get.find<AuthController>();
   bool _searchingUsers = false;
   List<Map<String, dynamic>> _userSearchResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSearchHistory();
+  }
+
+  Future<void> _loadSearchHistory() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _searchHistory = prefs.getStringList('searchHistory') ?? [];
+    });
+  }
+
+  Future<void> _saveSearchHistory() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('searchHistory', _searchHistory);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,19 +129,19 @@ class _SearchScreenState extends State<SearchScreen> {
               Expanded(
                 child: _buildUserSearchResults(),
               ),
-            ],
-            SizedBox(height: 16.0),
-            Text(
-              'Search History',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16.0,
+              SizedBox(height: 16.0),
+              Text(
+                'Search History',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
               ),
-            ),
-            SizedBox(height: 8.0),
-            Expanded(
-              child: _buildSearchHistory(),
-            ),
+              SizedBox(height: 8.0),
+              Expanded(
+                child: _buildSearchHistory(),
+              ),
+            ],
           ],
         ),
       ),
@@ -130,8 +149,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchHistory() {
-    return ListView(
-      children: _searchHistory.map((term) => _buildHistoryItem(term)).toList(),
+    return ListView.builder(
+      itemCount: _searchHistory.length,
+      itemBuilder: (context, index) {
+        return _buildHistoryItem(_searchHistory[index]);
+      },
     );
   }
 
@@ -150,6 +172,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _removeFromSearchHistory(String term) {
     setState(() {
       _searchHistory.remove(term);
+      _saveSearchHistory();
     });
   }
 
@@ -157,6 +180,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       if (!_searchHistory.contains(term)) {
         _searchHistory.insert(0, term);
+        _saveSearchHistory();
       }
     });
 

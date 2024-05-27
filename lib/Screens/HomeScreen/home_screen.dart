@@ -19,7 +19,7 @@ class HomeScreenState extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreenState> {
+class _HomeScreenState extends State<HomeScreenState> with WidgetsBindingObserver {
   final AuthController _authController = Get.find<AuthController>();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -27,18 +27,27 @@ class _HomeScreenState extends State<HomeScreenState> {
   int _selectedIndex = 1;
   int _currentIndex = 0;
   bool _isPlaying = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadInitialPosts();
   }
 
   @override
   void dispose() {
-    // Detener el reproductor de audio cuando el widget se elimine
+    WidgetsBinding.instance.removeObserver(this);
     _audioPlayer.stop();
     _audioPlayer.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _audioPlayer.stop();
+    }
   }
 
   Future<void> _loadInitialPosts() async {
