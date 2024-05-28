@@ -1,10 +1,12 @@
 import 'dart:convert';
  
+import 'package:BeatNow/Models/UserSingleton.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
  
  
 import '../../Controllers/auth_controller.dart';
@@ -287,9 +289,106 @@ void registerOk() async {
       _passwordController.text,
     );
     _showErrorSnackBar('Registration successful!');
+    _login(_usernameController.text, _passwordController.text,
+                        context);
     _authController.changeTab(10);
   } catch (e) {
     _showErrorSnackBar('Failed to register user: $e');
+  }
+}
+void _login(String username, String password, BuildContext context) async {
+  // Obtener el token de acceso
+  final token = await _token(username, password, context);
+ 
+  if (token != null) {
+    // Obtener información del usuario usando el token
+    final userInfo = await getUserInfo(token);
+ 
+    if (userInfo != null && userInfo['is_active'] == false) {
+      _authController.changeTab(10);
+    } else if(userInfo != null && userInfo['is_active'] != false){
+      _authController.changeTab(3);
+    } else {
+      _authController.changeTab(9);
+    }
+}
+}
+  Future<Map<String, dynamic>> getTokenUser(String username, String password) async {
+    final apiUrl = Uri.parse('http://217.182.70.161:6969/token');
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final body = {
+      'username': username,
+      'password': password,
+    };
+ 
+    final response = await http.post(
+      apiUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body,
+    );
+ 
+    if (response.statusCode == 200) {
+      await prefs.setString('username', username);
+      await prefs.setString('password', password);
+    }
+ 
+    // Decodificar y devolver la respuesta del servidor
+    return json.decode(response.body);
+  }
+ 
+ 
+Future<String?> _token(String username, String password, BuildContext context) async {
+  final response = await getTokenUser(username, password);
+ 
+  if (response["access_token"] != null) {
+    // Actualizar el token de acceso en UserSingleton
+    UserSingleton().token = response["access_token"];
+    String token = response["access_token"];
+    return token;
+  } else {
+
+    return null;
+  }
+}
+ 
+Future<Map<String, dynamic>?> getUserInfo(String token) async {
+  final apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/users/me');
+ 
+  try {
+    final response = await http.get(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+ 
+    if (response.body.isNotEmpty) {
+      final jsonResponse = jsonDecode(response.body);
+      UserSingleton().id = jsonResponse['id'];
+      UserSingleton().name = jsonResponse['full_name'];
+      UserSingleton().username = jsonResponse['username'];
+      UserSingleton().email = jsonResponse['email'];
+      UserSingleton().isActive = jsonResponse['is_active'];
+      return jsonResponse;
+    }
+    else if(response.statusCode == 401){
+      // Mostrar mensaje de error si la solicitud falla
+      print('Request failed with status: ${response.statusCode}.');
+      return null;
+    }
+    else {
+      // Mostrar mensaje de error si la solicitud falla
+      print('Request failed with status: ${response.statusCode}.');
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
+    }
+  } catch (e) {
+    // Mostrar mensaje de error si se produce una excepción
+    print('Error: $e');
+    return null;
   }
 }
  
