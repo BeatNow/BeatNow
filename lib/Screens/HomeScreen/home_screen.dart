@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreenState> with WidgetsBindingObserve
     return LyricScreen();
   }
 
-  Widget _buildCarousel(BuildContext context) {
+Widget _buildCarousel(BuildContext context) {
     // Reproducir la música al inicio del widget
     return CarouselSlider.builder(
       options: CarouselOptions(
@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreenState> with WidgetsBindingObserve
         scrollDirection: Axis.vertical,
         onPageChanged: (index, _) {
           _loadMorePosts();
-
+ 
           setState(() {
             _currentIndex = index;
             UserSingleton().current = _currentIndex;
@@ -238,10 +238,22 @@ class _HomeScreenState extends State<HomeScreenState> with WidgetsBindingObserve
                     _audioPlayer.resume();
                   }
                 },
-                child: Image.network(
+                child:Image.network(
                   item.coverImageUrl,
                   fit: BoxFit.cover,
                   height: double.infinity,
+                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    }
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
                 ),
               ),
               _buildDynamicButtons(context, index),
