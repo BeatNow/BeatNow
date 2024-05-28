@@ -11,6 +11,7 @@ class AuthController extends GetxController {
  
   @override
   void onInit() {
+    checkLogin();
     super.onInit();
   }
  
@@ -37,7 +38,7 @@ class AuthController extends GetxController {
       final userInfo = await getUserInfo(token);
       if (userInfo != null && userInfo['is_active'] == false) {
         _authController.changeTab(10);
-    } else if(userInfo != null && userInfo['is_active'] == false){
+    } else if(userInfo != null && userInfo['is_active'] != false){
         _authController.changeTab(3);
     } else {
         _authController.changeTab(9);
