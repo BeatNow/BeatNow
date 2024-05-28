@@ -387,16 +387,6 @@ Future<User?> signInWithGoogle(BuildContext context) async {
   }
 }
  
-void loginCache() async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString('username', 'aa');
-  await prefs.setString('password', 'aa');
-  final String? username = prefs.getString('username');
-  final String? password = prefs.getString('password');
- 
-  if (username != null && password != null) {
-    _login(username, password, context);
-  }
-}
+
  
 }
