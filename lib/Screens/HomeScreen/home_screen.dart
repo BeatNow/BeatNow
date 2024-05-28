@@ -8,6 +8,7 @@ import 'package:BeatNow/Screens/ProfileScreen/profileuser_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -387,7 +388,12 @@ class _HomeScreenState extends State<HomeScreenState> with WidgetsBindingObserve
                 child: Icon(Icons.ios_share, color: Colors.white, size: 35),
                 backgroundColor: Colors.transparent,
                 onPressed: () {
-                  // Acción para 'share'.
+                  // Extracting details from the current post to share
+                  final post = _gifList[
+                      index]; // Ensure 'index' is accessible in this context
+                  final String shareText =
+                      'Check out this post in BeatNow App titled "${post.title}"!\nDescription: ${post.description}';
+                  Share.share(shareText);
                 },
                 elevation: 0,
               ),

@@ -10,25 +10,25 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
-
+ 
+ 
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
-  
-  
+ 
+ 
 }
-
+ 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthController _authController = Get.find<
       AuthController>(); // Obtener instancia del controlador AuthController
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   // Obtain shared preferences.
-  
-
+ 
+ 
   bool _obscurePassword = true;
-
+ 
   @override
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
@@ -43,9 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
         fontSize: 16.0,
       ),
     );
-
-
-
+ 
+ 
+ 
     return Scaffold(
       backgroundColor: Color(0xFF111111),
       body: SafeArea(
@@ -184,25 +184,26 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
+ 
   void _togglePasswordVisibility() {
     setState(() {
       _obscurePassword = !_obscurePassword;
     });
   }
-
+ 
   void _login(String username, String password, BuildContext context) async {
   // Obtener el token de acceso
   final token = await _token(username, password, context);
-
+ 
   if (token != null) {
     // Obtener información del usuario usando el token
     final userInfo = await getUserInfo(token);
-
-    if (userInfo != null) {
-      // Navegar a la pestaña HomeScreenState
+ 
+    if (userInfo != null && userInfo['is_active'] == false) {
+      _authController.changeTab(10);
+    } else if(userInfo != null && userInfo['is_active'] != false){
       _authController.changeTab(3);
-    } else {
+    }else {
       // Mostrar mensaje de error si no se pudo obtener la información del usuario
       _showErrorSnackBar('Failed to get user info' , context);
     }
@@ -218,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
       'username': username,
       'password': password,
     };
-
+ 
     final response = await http.post(
       apiUrl,
       headers: <String, String>{
@@ -226,20 +227,20 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       body: body,
     );
-
+ 
     if (response.statusCode == 200) {
       await prefs.setString('username', username);
       await prefs.setString('password', password);
     }
-
+ 
     // Decodificar y devolver la respuesta del servidor
     return json.decode(response.body);
   }
-
-
+ 
+ 
 Future<String?> _token(String username, String password, BuildContext context) async {
   final response = await getTokenUser(username, password);
-
+ 
   if (response["access_token"] != null) {
     // Actualizar el token de acceso en UserSingleton
     UserSingleton().token = response["access_token"];
@@ -251,10 +252,10 @@ Future<String?> _token(String username, String password, BuildContext context) a
     return null;
   }
 }
-
+ 
 Future<Map<String, dynamic>?> getUserInfo(String token) async {
   final apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/users/me');
-
+ 
   try {
     final response = await http.get(
       apiUrl,
@@ -263,13 +264,14 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
         'Content-Type': 'application/json',
       },
     );
-
+ 
     if (response.body.isNotEmpty) {
       final jsonResponse = jsonDecode(response.body);
       UserSingleton().id = jsonResponse['id'];
       UserSingleton().name = jsonResponse['full_name'];
       UserSingleton().username = jsonResponse['username'];
       UserSingleton().email = jsonResponse['email'];
+      UserSingleton().isActive = jsonResponse['is_active'];
       return jsonResponse;
     }
     else if(response.statusCode == 401){
@@ -289,8 +291,8 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
     return null;
   }
 }
-
-
+ 
+ 
   // Función para mostrar un SnackBar con un mensaje de error
   void _showErrorSnackBar(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -303,44 +305,44 @@ Future<Map<String, dynamic>?> getUserInfo(String token) async {
       ),
     );
   }
-
+ 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-
+ 
+ 
 Future<User?> signInWithGoogle(BuildContext context) async {
     try {
-
+ 
       await GoogleSignIn().signOut();
-
+ 
       // Sign in with Google
       final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
-
+ 
       if (gUser == null) {
         // El usuario canceló el inicio de sesión
         return null;
       }
-
+ 
       final GoogleSignInAuthentication gAuth = await gUser.authentication;
-
+ 
       final credential = GoogleAuthProvider.credential(
         accessToken: gAuth.accessToken,
         idToken: gAuth.idToken,
       );
-
+ 
       // Autenticar con Firebase Auth
       final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
-      
+     
       // Si la autenticación fue exitosa, navegar a la pantalla de inicio
      if (userCredential.user != null) {
-
+ 
         String fullName = gUser.displayName ?? '';
         String email = gUser.email ?? '';
         String username = gUser.email.split('@')[0]; // Supongamos que el nombre de usuario es la parte antes del '@' en el correo electrónico
         String password = 'GoogleAccount123!';
-
+ 
         String photo = gUser.photoUrl ?? '';
-
+ 
         try {
           // Intentar registrar al usuario
           await registerUser(fullName, email, username, password);
@@ -349,9 +351,9 @@ Future<User?> signInWithGoogle(BuildContext context) async {
          print('El usuario ya esta registrado, procediendo a iniciar sesión.');
         }
         _login(username, password, context);
-
-    } 
-
+ 
+    }
+ 
       return userCredential.user;
     } catch (e) {
       // Manejar errores aquí, como problemas de conexión o de autenticación
@@ -359,17 +361,17 @@ Future<User?> signInWithGoogle(BuildContext context) async {
       return null;
     }
   }
-
+ 
   Future<Map<String, dynamic>> registerUser(String fullname, String email, String username, String password) async {
   Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/register');
-
+ 
   Map<String, dynamic> body = {
     'full_name': fullname,
     'email': email,
     'username': username,
     'password': password,
   };
-
+ 
   final http.Response response = await http.post(
     apiUrl,
     headers: <String, String>{
@@ -377,24 +379,24 @@ Future<User?> signInWithGoogle(BuildContext context) async {
     },
     body: jsonEncode(body),
   );
-
+ 
   if (response.statusCode == 200) {
     return json.decode(response.body);
   } else {
     throw Exception('Failed to register user: ${response.body}');
   }
 }
-
+ 
 void loginCache() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setString('username', 'aa');
   await prefs.setString('password', 'aa');
   final String? username = prefs.getString('username');
   final String? password = prefs.getString('password');
-
+ 
   if (username != null && password != null) {
     _login(username, password, context);
   }
 }
-
+ 
 }

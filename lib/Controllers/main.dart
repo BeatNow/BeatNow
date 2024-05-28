@@ -1,3 +1,4 @@
+import 'package:BeatNow/Screens/AuthScreen/authentication_code_screen.dart';
 import 'package:BeatNow/Screens/AuthScreen/splash_screen.dart';
 import 'package:BeatNow/Screens/HomeScreen/saved_screen.dart';
 import 'package:BeatNow/Screens/ProfileScreen/AccountSettingsScreen.dart';
@@ -13,13 +14,13 @@ import '../Screens/ProfileScreen/profileuser_screen.dart';
 import '../Screens/HomeScreen/home_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-
+ 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(MyApp());
 }
-
+ 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -37,10 +38,10 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+ 
 class HomeScreen extends StatelessWidget {
   final AuthController _authController = Get.put(AuthController());
-
+ 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -65,6 +66,10 @@ class HomeScreen extends StatelessWidget {
           return ProfileOtherScreen();
         case 9:
           return LoginScreen();
+        case 10:
+          return CodeConfirmationScreen();
+        case 11:
+          return SplashScreen(2);
         default:
           return LoginScreen();
       }

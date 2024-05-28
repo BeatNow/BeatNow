@@ -2,12 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import '../../Controllers/auth_controller.dart';
+import 'package:regexed_validator/regexed_validator.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
-    final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
-
+  final AuthController _authController = Get.find<AuthController>(); // Obtener instancia del controlador AuthController
+  final TextEditingController _emailController = TextEditingController();
+ 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF3C0F4B),
+      minimumSize: Size(double.infinity, 56),
+      padding: EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      textStyle: TextStyle(
+        fontFamily: 'Franklin Gothic Demi',
+        fontSize: 16.0,
+      ),
+    );
+ 
     return Scaffold(
       backgroundColor: Color(0xFF111111),
       appBar: AppBar(
@@ -25,20 +40,24 @@ class ForgotPasswordScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start, // Alinea los elementos al principio
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text(
-              'Enter your email',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16.0,
-                fontFamily: 'Franklin Gothic Demi',
+            Center(
+              child: Text(
+                'Enter your email',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16.0,
+                  fontFamily: 'Franklin Gothic Demi',
+                ),
               ),
             ),
             SizedBox(height: 20.0),
             TextField(
               style: TextStyle(color: Colors.white),
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'Email',
                 hintStyle: TextStyle(color: Colors.white70),
@@ -52,32 +71,43 @@ class ForgotPasswordScreen extends StatelessWidget {
               keyboardType: TextInputType.emailAddress,
             ),
             SizedBox(height: 8.0),
-            Text(
-              'An email will be sent to your account.',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14.0,
-                fontFamily: 'Franklin Gothic Demi',
+            Center(
+              child: Text(
+                'An email will be sent to your account.',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14.0,
+                  fontFamily: 'Franklin Gothic Demi',
+                ),
               ),
             ),
-            Spacer(),
+            SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
-                // Implement send password reset email logic
+                // Get the email from the text field
+                String email = _emailController.text.trim();
+                if (validator.email(email)) { // Verificar si el correo electrónico es válido
+                  // Eliminar el símbolo "@" del correo electrónico antes de enviarlo a la API
+ 
+                  // Save the email to AuthController
+                  _authController.email.value = email;
+                  // Change tab to 11
+                  _authController.changeTab(11);
+                } else {
+                  // Mostrar un mensaje de error si el correo electrónico no es válido
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Please enter a valid email address.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Color(0xFF3C0F4B),
+                    ),
+                  );
+                }
               },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-              ),
-              child: Text(
-                'Send Recuperation Email',
-                style: TextStyle(
-                  fontFamily: 'Franklin Gothic Demi',
-                  fontSize: 16.0,
-                ),
-              ),
+              style: buttonStyle,
+              child: Text('Send'),
             ),
             SizedBox(height: 20.0),
             Center(
@@ -93,7 +123,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                         color: Color(0xFF4E0566),
                       ),
                       recognizer: TapGestureRecognizer()..onTap = () {
-                        _authController.changeTab(0);
+                        _authController.changeTab(9);
                       },
                     ),
                   ],
@@ -103,7 +133,6 @@ class ForgotPasswordScreen extends StatelessWidget {
           ],
         ),
       ),
-    ),
     );
   }
 }

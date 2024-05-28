@@ -27,7 +27,10 @@ dependencies:
   cached_network_image: ^3.0.0
   flutter_soloud: ^2.0.1
   google_fonts: ^4.0.3
-
+  regexed_validator: ^2.0.0+1
+  pin_code_fields: ^7.4.0
+  share_plus: ^6.0.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
