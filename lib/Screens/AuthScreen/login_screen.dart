@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   } else {
     // Mostrar mensaje de error si no se pudo obtener el token de acceso
-    _showErrorSnackBar('Failed to get access token' , context);
+   
   }
 }
   Future<Map<String, dynamic>> getTokenUser(String username, String password) async {
@@ -248,7 +248,7 @@ Future<String?> _token(String username, String password, BuildContext context) a
     return token;
   } else {
     // Mostrar mensaje de error si la petición falla
-    _showErrorSnackBar("login incorrecto", context);
+    _showErrorSnackBar("Incorrect Login", context);
     return null;
   }
 }
@@ -348,7 +348,7 @@ Future<User?> signInWithGoogle(BuildContext context) async {
           await registerUser(fullName, email, username, password);
         } catch (e) {
           // Si hay una excepción al registrar al usuario, solo inicia sesión
-         print('El usuario ya esta registrado, procediendo a iniciar sesión.');
+         print('User already registered. Logging in...');
         }
         _login(username, password, context);
  
@@ -357,7 +357,7 @@ Future<User?> signInWithGoogle(BuildContext context) async {
       return userCredential.user;
     } catch (e) {
       // Manejar errores aquí, como problemas de conexión o de autenticación
-      print("Error en el inicio de sesión con Google: $e");
+      print("Error logging in with Google: $e");
       return null;
     }
   }
