@@ -1,17 +1,17 @@
 import 'dart:convert';
-
+ 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-
-
+ 
+ 
 import '../../Controllers/auth_controller.dart';
-
-
+ 
+ 
 void main() => runApp(MyApp());
-
+ 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -31,15 +31,15 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+ 
 class SignUpScreen extends StatefulWidget {
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
-
+ 
 class _SignUpScreenState extends State<SignUpScreen> {
   final AuthController _authController = Get.find<AuthController>(); // Obtén la instancia del controlador AuthController
-
+ 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _fullNameController = TextEditingController();
   TextEditingController _usernameController = TextEditingController();
@@ -47,7 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-
+ 
   @override
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
@@ -62,14 +62,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         fontSize: 16.0,
       ),
     );
-
+ 
     final ButtonStyle socialButtonStyle = ElevatedButton.styleFrom(
       shape: CircleBorder(),
       padding: EdgeInsets.all(16), // Sin efecto al presionar
       shadowColor: Colors.transparent, // Sin sombra
       elevation: 0, // Sin elevación
     );
-
+ 
     return Scaffold(
       backgroundColor: Color(0xFF111111), // Fondo de la pantalla
       body: SafeArea(
@@ -228,9 +228,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
-
-  
-
+ 
+ 
+ 
   // Función para comprobar los campos del registro
   void _register(TextEditingController fullNameController, TextEditingController usernameController, TextEditingController emailController, TextEditingController passwordController, TextEditingController confirmPasswordController) {
     String fullName = fullNameController.text;
@@ -238,7 +238,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String email = emailController.text;
     String password = passwordController.text;
     String confirmPassword = confirmPasswordController.text;
-
+ 
     // Verifica los campos del formulario
     if (fullName.isEmpty || username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showErrorSnackBar('All fields are required.');
@@ -265,7 +265,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       registerOk();
     }
   }
-
+ 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -277,7 +277,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
-
+ 
 void registerOk() async {
   try {
     await registerUser(
@@ -287,23 +287,24 @@ void registerOk() async {
       _passwordController.text,
     );
     _showErrorSnackBar('Registration successful!');
+    _authController.changeTab(10);
   } catch (e) {
     _showErrorSnackBar('Failed to register user: $e');
   }
 }
-
-
-
+ 
+ 
+ 
 Future<Map<String, dynamic>> registerUser(String fullname, String email, String username, String password) async {
   Uri apiUrl = Uri.parse('http://217.182.70.161:6969/v1/api/users/register');
-
+ 
   Map<String, dynamic> body = {
     'full_name': fullname,
     'email': email,
     'username': username,
     'password': password,
   };
-
+ 
   final http.Response response = await http.post(
     apiUrl,
     headers: <String, String>{
@@ -311,13 +312,13 @@ Future<Map<String, dynamic>> registerUser(String fullname, String email, String 
     },
     body: jsonEncode(body),
   );
-
+ 
   if (response.statusCode == 200) {
     return json.decode(response.body);
   } else {
     throw Exception('Failed to register user: ${response.body}');
   }
 }
-
-
+ 
+ 
 }

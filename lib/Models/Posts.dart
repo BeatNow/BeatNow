@@ -50,7 +50,6 @@ class Posts {
   String get title => _title;
   String get coverImageUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/caratula.jpg';
   String get audioUrl => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.$_audioformat';
-  //String get audioUrlmp3 => 'http://172.203.251.28/beatnow/$_userId/posts/$_id/audio.mp3';
   String get description => _description;
   DateTime get date => publicationDate;
   int get likes => _likes;
