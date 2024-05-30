@@ -7,36 +7,36 @@ import 'package:BeatNow/Controllers/auth_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
-
+ 
 class SearchScreen extends StatefulWidget {
   @override
   _SearchScreenState createState() => _SearchScreenState();
 }
-
+ 
 class _SearchScreenState extends State<SearchScreen> {
   List<String> _searchHistory = [];
   final AuthController _authController = Get.find<AuthController>();
   bool _searchingUsers = false;
   List<Map<String, dynamic>> _userSearchResults = [];
-
+ 
   @override
   void initState() {
     super.initState();
     _loadSearchHistory();
   }
-
+ 
   Future<void> _loadSearchHistory() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _searchHistory = prefs.getStringList('searchHistory') ?? [];
     });
   }
-
+ 
   Future<void> _saveSearchHistory() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setStringList('searchHistory', _searchHistory);
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,7 +127,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               SizedBox(height: 8.0),
               Expanded(
-                child: _buildUserSearchResults(),
+                child: _buildUserSearchReadults(),
               ),
               SizedBox(height: 16.0),
               Text(
@@ -147,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
-
+ 
   Widget _buildSearchHistory() {
     return ListView.builder(
       itemCount: _searchHistory.length,
@@ -156,7 +156,7 @@ class _SearchScreenState extends State<SearchScreen> {
       },
     );
   }
-
+ 
   Widget _buildHistoryItem(String term) {
     return ListTile(
       title: Text(term),
@@ -168,14 +168,14 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
-
+ 
   void _removeFromSearchHistory(String term) {
     setState(() {
       _searchHistory.remove(term);
       _saveSearchHistory();
     });
   }
-
+ 
   void _addToSearchHistory(String term) {
     setState(() {
       if (!_searchHistory.contains(term)) {
@@ -183,7 +183,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _saveSearchHistory();
       }
     });
-
+ 
     if (_searchingUsers) {
       _searchUsers(term).then((results) {
         setState(() {
@@ -198,36 +198,44 @@ class _SearchScreenState extends State<SearchScreen> {
       });
     }
   }
-
-  Widget _buildUserSearchResults() {
-    if (_userSearchResults.isEmpty) {
-      return Text('No se han encontrado resultados.');
-    }
-    return ListView(
-      children: _userSearchResults.map((user) {
-        return ListTile(
-          title: Text(user['username']!),
-          onTap: () {
-            if (user['_id'] != null && user['username'] != null) {
-              OtherUserSingleton().id = user['_id']!;
-              OtherUserSingleton().username = user['username']!;
-              Get.to(() => ProfileOtherScreen());
-            } else {
-              // Manejar caso donde user['_id'] o user['username'] es nulo
-              print('Usuario no válido: $_userSearchResults');
-            }
-          },
-        );
-      }).toList(),
-    );
+ 
+  Widget _buildUserSearchReadults() {
+  if (_userSearchResults.isEmpty) {
+    return Text('No se han encontrado resultados.');
   }
-
+  return ListView.builder(
+    itemCount: _userSearchResults.length,
+    itemBuilder: (context, index) {
+      final user = _userSearchResults[index];
+      return ListTile(
+        leading: CircleAvatar(  // Se añade un CircleAvatar como widget leading
+          backgroundImage: NetworkImage(
+            "http://172.203.251.28/beatnow/" + user['_id']+ "/photo_profile/photo_profile.png"
+          ),
+          radius: 20, // Tamaño del avatar
+        ),
+        title: Text('@' + user['username']!),
+        onTap: () {
+          if (user['_id'] != null && user['username'] != null) {
+            OtherUserSingleton().id = user['_id']!;
+            OtherUserSingleton().username = user['username']!;
+            Get.to(() => ProfileOtherScreen());
+          } else {
+            // Manejar caso donde user['_id'] o user['username'] es nulo
+            print('Usuario no válido: $_userSearchResults');
+          }
+        },
+      );
+    },
+  );
+}
+ 
   void _showFilterPopup(BuildContext context) {
     String selectedGenre = 'Rock';
     double selectedPrice = 0.00;
     int selectedBpm = 120;
     String selectedInstrument = 'Guitar';
-
+ 
     List<String> instruments = [
       'Guitar',
       'Bass',
@@ -240,7 +248,7 @@ class _SearchScreenState extends State<SearchScreen> {
       'Brass',
       'Harp'
     ];
-
+ 
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -358,7 +366,7 @@ class _SearchScreenState extends State<SearchScreen> {
       },
     );
   }
-
+ 
   Future<List<dynamic>> _searchUsers(String query) async {
     final token = UserSingleton().token;
     final response = await http.get(
@@ -367,7 +375,27 @@ class _SearchScreenState extends State<SearchScreen> {
         'Authorization': 'Bearer $token',
       },
     );
-
+ 
+    if (response.statusCode == 200) {
+      final jsonResponse = convert.jsonDecode(response.body);
+      if (jsonResponse is List) {
+        return jsonResponse.where((user) => user['_id'] != null && user['username'] != null).toList();
+      } else {
+        throw Exception('Invalid response format');
+      }
+    } else {
+      throw Exception('Failed to load search results');
+    }
+  }
+  Future<List<dynamic>> _searchFilter(String query) async {
+    final token = UserSingleton().token;
+    final response = await http.get(
+      Uri.parse('http://217.182.70.161:6969/v1/api/search/user?username=$query'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+ 
     if (response.statusCode == 200) {
       final jsonResponse = convert.jsonDecode(response.body);
       if (jsonResponse is List) {
